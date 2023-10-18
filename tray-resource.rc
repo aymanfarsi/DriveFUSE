@@ -1,0 +1,3 @@
+aa-exe-icon ICON "assets/app-icon.ico"
+green-icon-file ICON "assets/icon-green.ico"
+red-icon-file ICON "assets/icon-red.ico"

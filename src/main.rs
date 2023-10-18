@@ -1,39 +1,75 @@
-#![warn(clippy::all, rust_2018_idioms)]
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
+use rclone_app::{
+    utils::{enums::Message, tray_menu::init_tray_menu},
+    RcloneApp,
+};
+use tray_item::{IconSource, TrayItem};
 
-// When compiling natively:
-#[cfg(not(target_arch = "wasm32"))]
-fn main() -> eframe::Result<()> {
-    env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
-
-    let native_options = eframe::NativeOptions {
-        centered: true,
-        decorated: true,
-        ..Default::default()
-    };
-    eframe::run_native(
-        "rclone app",
-        native_options,
-        Box::new(|cc| Box::new(rclone_app::RcloneApp::new(cc))),
-    )
-}
-
-// When compiling to web using trunk:
-#[cfg(target_arch = "wasm32")]
 fn main() {
-    // Redirect `log` message to `console.log` and friends:
-    eframe::WebLogger::init(log::LevelFilter::Debug).ok();
+    let mut tray =
+        TrayItem::new("RcloneApp Tray", IconSource::Resource("green-icon-file")).unwrap();
 
-    let web_options = eframe::WebOptions::default();
+    let rx = init_tray_menu(&mut tray);
+    // let mut tx_main: Option<SyncSender<Message>> = None;
 
-    wasm_bindgen_futures::spawn_local(async {
-        eframe::WebRunner::new()
-            .start(
-                "the_canvas_id", // hardcode it
-                web_options,
-                Box::new(|cc| Box::new(rclone_app::RcloneApp::new(cc))),
-            )
-            .await
-            .expect("failed to start eframe");
-    });
+    loop {
+        match rx.recv() {
+            Ok(Message::Quit) => {
+                println!("Quit");
+                // if let Some(tx) = tx_main.clone() {
+                //     tx.send(Message::Quit).unwrap();
+                // } else {
+                //     println!("[Quit] No app is opened");
+                // }
+                break;
+            }
+            Ok(Message::Red) => {
+                // if let Some(tx) = tx_main.clone() {
+                //     tx.send(Message::Red).unwrap();
+                // } else {
+                //     println!("[Red] No app is opened");
+                // }
+                tray.set_icon(IconSource::Resource("red-icon-file"))
+                    .unwrap();
+                println!("Red");
+            }
+            Ok(Message::Green) => {
+                // if let Some(tx) = tx_main.clone() {
+                //     tx.send(Message::Green).unwrap();
+                // } else {
+                //     println!("[Green] No app is opened");
+                // }
+                tray.set_icon(IconSource::Resource("green-icon-file"))
+                    .unwrap();
+                println!("Green");
+            }
+            Ok(Message::ShowApp) => {
+                // if is_hidden {
+                //     println!("[ShowApp] Opening app");
+                //     is_hidden = false;
+                //     let (app, tx) = RcloneApp::new();
+                //     tx_main = Some(tx);
+                //     let native_options = eframe::NativeOptions::default();
+                //     let _ = eframe::run_native(
+                //         "Rclone App",
+                //         native_options,
+                //         Box::new(|_cc| Box::new(app)),
+                //     );
+                // } else {
+                //     println!("[ShowApp] App is already opened");
+                // }
+                let (app, _) = RcloneApp::new();
+                let native_options = eframe::NativeOptions {
+                    centered: true,
+                    initial_window_size: Some(egui::Vec2::new(400.0, 200.0)),
+                    ..Default::default()
+                };
+                let _ =
+                    eframe::run_native("Rclone App", native_options, Box::new(|_cc| Box::new(app)));
+            }
+            Err(_) => {
+                println!("Error");
+                break;
+            }
+        }
+    }
 }

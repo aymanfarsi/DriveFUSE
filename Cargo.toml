@@ -1,38 +1,22 @@
 [package]
 name = "rclone_app"
 version = "0.1.0"
-authors = []
+authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
 rust-version = "1.71"
 
 [dependencies]
-egui = "0.22.0"
-eframe = { version = "0.22.0", default-features = false, features = [
-    "default_fonts", # Embed the default egui fonts.
-    "wgpu", # Use the glow rendering backend. Alternative: "glow".
+egui = "0.23.0"
+eframe = { version = "0.23.0", default-features = false, features = [
+    "default_fonts",
+    "wgpu",
 ] }
-log = "0.4"
+tray-item = "0.8.0"
+# tokio = { version = "1.33.0", features = ["rt-multi-thread"] }
 
-# native:
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger = "0.10"
-
-# web:
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen-futures = "0.4"
-
-
-[profile.release]
-opt-level = 2 # fast and small wasm
-
-# Optimize all dependencies even in debug builds:
-[profile.dev.package."*"]
-opt-level = 2
-
-
-[patch.crates-io]
-
+[build-dependencies]
+windres = "0.2.2"
 
 [package.metadata.scripts]
-run = "cargo build -r ; ./target/release/rclone_app.exe"
+run = "cargo run"
 build = "cargo build -r"
