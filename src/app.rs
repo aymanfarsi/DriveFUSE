@@ -13,6 +13,7 @@ pub struct RcloneApp {
     rclone: Rclone,
 
     is_first_run: bool,
+    is_close_requested: bool,
 
     tx_egui: SyncSender<Message>,
     rx_egui: Receiver<Message>,
@@ -34,6 +35,7 @@ impl RcloneApp {
             rclone,
 
             is_first_run: true,
+            is_close_requested: false,
 
             tx_egui,
             rx_egui,
@@ -43,8 +45,14 @@ impl RcloneApp {
 
 impl eframe::App for RcloneApp {
     fn on_close_event(&mut self) -> bool {
-        self.tx_egui.send(Message::HideApp).unwrap();
-        false
+        match self.is_close_requested {
+            true => true,
+            false => {
+                self.tx_egui.send(Message::HideApp).unwrap();
+                self.is_close_requested = true;
+                false
+            }
+        }
     }
 
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
@@ -62,6 +70,8 @@ impl eframe::App for RcloneApp {
                 loop {
                     match rx_tray.recv() {
                         Ok(Message::Quit) => {
+                            tx_egui_clone_tray.send(Message::ShowApp).unwrap();
+                            ctx_clone_tray.request_repaint();
                             tx_egui_clone_tray.send(Message::Quit).unwrap();
                             ctx_clone_tray.request_repaint();
                             break;
@@ -139,6 +149,7 @@ impl eframe::App for RcloneApp {
         if let Ok(message) = self.rx_egui.try_recv() {
             match message {
                 Message::Quit => {
+                    self.is_close_requested = true;
                     frame.close();
                 }
                 Message::Red => {
