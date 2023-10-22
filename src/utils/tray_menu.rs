@@ -4,20 +4,17 @@ use tray_item::TrayItem;
 use super::enums::Message;
 
 pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
-    // tray.add_label("Tray Label").unwrap();
-
-    // tray.add_menu_item("Hello", || {
-    //     println!("Hello!");
-    // })
-    // .unwrap();
-
-    // tray.inner_mut().add_separator().unwrap();
-
     let (tx, rx) = mpsc::sync_channel(1);
 
     let show_app_tx = tx.clone();
-    tray.add_menu_item("Show app (click once)", move || {
+    tray.add_menu_item("Show app", move || {
         show_app_tx.send(Message::ShowApp).unwrap();
+    })
+    .unwrap();
+
+    let hide_app_tx = tx.clone();
+    tray.add_menu_item("Hide app", move || {
+        hide_app_tx.send(Message::HideApp).unwrap();
     })
     .unwrap();
 

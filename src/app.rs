@@ -1,34 +1,99 @@
-use std::sync::mpsc::{Receiver, SyncSender};
+use std::{
+    sync::mpsc::{Receiver, SyncSender},
+    thread,
+};
 
 use eframe::egui;
+use tray_item::{IconSource, TrayItem};
 
-use crate::utils::enums::Message;
+use crate::utils::{enums::Message, tray_menu::init_tray_menu};
 
 pub struct RcloneApp {
     name: String,
     age: u32,
-    rx_main: Receiver<Message>,
+
+    is_first_run: bool,
+
+    tx_egui: SyncSender<Message>,
+    rx_egui: Receiver<Message>,
+}
+
+impl Default for RcloneApp {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl RcloneApp {
-    pub fn new() -> (Self, SyncSender<Message>) {
-        let (tx_main, rx_main) = std::sync::mpsc::sync_channel(1);
+    pub fn new() -> Self {
+        let (tx_egui, rx_egui) = std::sync::mpsc::sync_channel(1);
 
-        (
-            Self {
-                name: "evilDAVE".to_owned(),
-                age: 24,
-                rx_main,
-            },
-            tx_main,
-        )
+        Self {
+            name: "evilDAVE".to_owned(),
+            age: 24,
+
+            is_first_run: true,
+
+            tx_egui,
+            rx_egui,
+        }
     }
 }
 
 impl eframe::App for RcloneApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        // Handle incoming messages from the main thread.
-        while let Ok(message) = self.rx_main.try_recv() {
+        if self.is_first_run {
+            self.is_first_run = false;
+
+            let tx_egui_clone = self.tx_egui.clone();
+            let ctx_clone = ctx.clone();
+
+            thread::spawn(move || {
+                let mut tray =
+                    TrayItem::new("RcloneApp Tray", IconSource::Resource("green-icon-file"))
+                        .unwrap();
+                let rx_tray = init_tray_menu(&mut tray);
+                loop {
+                    match rx_tray.recv() {
+                        Ok(Message::Quit) => {
+                            println!("Quit");
+                            tx_egui_clone.send(Message::Quit).unwrap();
+                            ctx_clone.request_repaint();
+                            break;
+                        }
+                        Ok(Message::Red) => {
+                            println!("Red");
+                            tray.set_icon(IconSource::Resource("red-icon-file"))
+                                .unwrap();
+                            tx_egui_clone.send(Message::Red).unwrap();
+                            ctx_clone.request_repaint();
+                        }
+                        Ok(Message::Green) => {
+                            println!("Green");
+                            tx_egui_clone.send(Message::Green).unwrap();
+                            tray.set_icon(IconSource::Resource("green-icon-file"))
+                                .unwrap();
+                            ctx_clone.request_repaint();
+                        }
+                        Ok(Message::ShowApp) => {
+                            println!("Show");
+                            tx_egui_clone.send(Message::ShowApp).unwrap();
+                            ctx_clone.request_repaint();
+                        }
+                        Ok(Message::HideApp) => {
+                            println!("Hide");
+                            tx_egui_clone.send(Message::HideApp).unwrap();
+                            ctx_clone.request_repaint();
+                        }
+                        Err(_) => {
+                            eprintln!("Error receiving message from tray menu");
+                        }
+                    }
+                }
+            });
+        }
+
+        while let Ok(message) = self.rx_egui.try_recv() {
             match message {
                 Message::Quit => {
                     frame.close();
@@ -39,12 +104,21 @@ impl eframe::App for RcloneApp {
                 Message::Green => {
                     frame.set_window_title("RcloneApp - Green");
                 }
-                _ => {}
+                Message::ShowApp => {
+                    frame.set_visible(true);
+                }
+                Message::HideApp => {
+                    frame.set_visible(false);
+                }
             }
         }
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.menu_button("File", |ui| {
+                if ui.button("Show/Hide").clicked() {
+                    frame.set_visible(false);
+                }
+
                 if ui.button("Quit").clicked() {
                     frame.close();
                 }
