@@ -6,6 +6,8 @@ use super::enums::Message;
 pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
     let (tx, rx) = mpsc::sync_channel(1);
 
+    // TODO: combine show & hide app into one menu item
+    // use https://github.com/olback/tray-item-rs/blob/master/examples/windows-edit-menu-items/src/main.rs
     let show_app_tx = tx.clone();
     tray.add_menu_item("Show app", move || {
         show_app_tx.send(Message::ShowApp).unwrap();

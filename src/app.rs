@@ -1,7 +1,4 @@
-use std::{
-    sync::mpsc::{Receiver, SyncSender},
-    thread,
-};
+use std::sync::mpsc::{Receiver, SyncSender};
 
 use eframe::egui;
 use tray_item::{IconSource, TrayItem};
@@ -49,7 +46,7 @@ impl eframe::App for RcloneApp {
             let tx_egui_clone = self.tx_egui.clone();
             let ctx_clone = ctx.clone();
 
-            thread::spawn(move || {
+            tokio::spawn(async move {
                 let mut tray =
                     TrayItem::new("RcloneApp Tray", IconSource::Resource("green-icon-file"))
                         .unwrap();

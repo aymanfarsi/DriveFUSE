@@ -1,6 +1,10 @@
 use rclone_app::RcloneApp;
+use tokio::runtime::Runtime;
 
 fn main() {
+    let rt = Runtime::new().expect("Unable to create Runtime");
+    let _enter = rt.enter();
+
     let app = RcloneApp::default();
     let native_options = eframe::NativeOptions {
         centered: true,
