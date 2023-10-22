@@ -1,13 +1,16 @@
 use std::sync::mpsc::{Receiver, SyncSender};
 
 use eframe::egui;
+use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use tray_item::{IconSource, TrayItem};
 
-use crate::utils::{enums::Message, tray_menu::init_tray_menu};
+use crate::{
+    backend::rclone::Rclone,
+    utils::{enums::Message, tray_menu::init_tray_menu, utils::rclone_config_path},
+};
 
 pub struct RcloneApp {
-    name: String,
-    age: u32,
+    rclone: Rclone,
 
     is_first_run: bool,
 
@@ -25,9 +28,10 @@ impl RcloneApp {
     pub fn new() -> Self {
         let (tx_egui, rx_egui) = std::sync::mpsc::sync_channel(1);
 
+        let rclone = Rclone::init();
+
         Self {
-            name: "evilDAVE".to_owned(),
-            age: 24,
+            rclone,
 
             is_first_run: true,
 
@@ -39,13 +43,12 @@ impl RcloneApp {
 
 impl eframe::App for RcloneApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        // * Spawn tray menu thread on first run
         if self.is_first_run {
             self.is_first_run = false;
 
-            let tx_egui_clone = self.tx_egui.clone();
-            let ctx_clone = ctx.clone();
-
+            // * Spawn tray menu thread on first run
+            let tx_egui_clone_tray = self.tx_egui.clone();
+            let ctx_clone_tray = ctx.clone();
             tokio::spawn(async move {
                 let mut tray =
                     TrayItem::new("RcloneApp Tray", IconSource::Resource("green-icon-file"))
@@ -54,37 +57,73 @@ impl eframe::App for RcloneApp {
                 loop {
                     match rx_tray.recv() {
                         Ok(Message::Quit) => {
-                            println!("Quit");
-                            tx_egui_clone.send(Message::Quit).unwrap();
-                            ctx_clone.request_repaint();
+                            tx_egui_clone_tray.send(Message::Quit).unwrap();
+                            ctx_clone_tray.request_repaint();
                             break;
                         }
                         Ok(Message::Red) => {
-                            println!("Red");
                             tray.set_icon(IconSource::Resource("red-icon-file"))
                                 .unwrap();
-                            tx_egui_clone.send(Message::Red).unwrap();
-                            ctx_clone.request_repaint();
+                            tx_egui_clone_tray.send(Message::Red).unwrap();
+                            ctx_clone_tray.request_repaint();
                         }
                         Ok(Message::Green) => {
-                            println!("Green");
-                            tx_egui_clone.send(Message::Green).unwrap();
+                            tx_egui_clone_tray.send(Message::Green).unwrap();
                             tray.set_icon(IconSource::Resource("green-icon-file"))
                                 .unwrap();
-                            ctx_clone.request_repaint();
+                            ctx_clone_tray.request_repaint();
                         }
                         Ok(Message::ShowApp) => {
-                            println!("Show");
-                            tx_egui_clone.send(Message::ShowApp).unwrap();
-                            ctx_clone.request_repaint();
+                            tx_egui_clone_tray.send(Message::ShowApp).unwrap();
+                            ctx_clone_tray.request_repaint();
                         }
                         Ok(Message::HideApp) => {
-                            println!("Hide");
-                            tx_egui_clone.send(Message::HideApp).unwrap();
-                            ctx_clone.request_repaint();
+                            tx_egui_clone_tray.send(Message::HideApp).unwrap();
+                            ctx_clone_tray.request_repaint();
                         }
                         Err(_) => {
                             eprintln!("Error receiving message from tray menu");
+                        }
+                        Ok(Message::RcloneConfigUpdated) => {}
+                    }
+                }
+            });
+
+            // * Spawn rclone config watcher thread
+            let tx_egui_clone_config = self.tx_egui.clone();
+            let ctx_clone_config = ctx.clone();
+            tokio::spawn(async move {
+                let (tx_temp, mut rx_temp) = tokio::sync::mpsc::channel(1);
+                let mut watcher: RecommendedWatcher = RecommendedWatcher::new(
+                    move |res| {
+                        tx_temp.blocking_send(res).unwrap();
+                    },
+                    Config::default(),
+                )
+                .unwrap();
+                watcher
+                    .watch(
+                        rclone_config_path().unwrap().as_path(),
+                        RecursiveMode::Recursive,
+                    )
+                    .unwrap();
+                loop {
+                    match rx_temp.recv().await {
+                        Some(res) => match res {
+                            Ok(event) => {
+                                if event.kind.is_modify() {
+                                    tx_egui_clone_config
+                                        .send(Message::RcloneConfigUpdated)
+                                        .unwrap();
+                                    ctx_clone_config.request_repaint();
+                                }
+                            }
+                            Err(_) => {
+                                eprintln!("Error receiving message from rclone config watcher");
+                            }
+                        },
+                        None => {
+                            eprintln!("Channel closed");
                         }
                     }
                 }
@@ -109,35 +148,49 @@ impl eframe::App for RcloneApp {
                 Message::HideApp => {
                     frame.set_visible(false);
                 }
+                Message::RcloneConfigUpdated => {
+                    self.rclone = Rclone::init();
+                }
             }
         }
 
         // * Top panel
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.menu_button("File", |ui| {
-                if ui.button("Show/Hide").clicked() {
-                    frame.set_visible(false);
+                if ui.button("Hide").clicked() {
+                    self.tx_egui.send(Message::HideApp).unwrap();
+                    ui.close_menu();
                 }
-
                 if ui.button("Quit").clicked() {
-                    frame.close();
+                    self.tx_egui.send(Message::Quit).unwrap();
+                    ui.close_menu();
                 }
             });
         });
 
         // * Central panel
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("My egui Application");
-            ui.horizontal(|ui| {
-                let name_label = ui.label("Your name: ");
-                ui.text_edit_singleline(&mut self.name)
-                    .labelled_by(name_label.id);
-            });
-            ui.add(egui::Slider::new(&mut self.age, 0..=120).text("age"));
-            if ui.button("Click each year").clicked() {
-                self.age += 1;
-            }
-            ui.label(format!("Hello '{}', age {}", self.name, self.age));
+            ui.heading("RcloneApp");
+            let count_storages = self.rclone.storages.len();
+            ui.label(format!("Storages: {}", count_storages));
+            egui::ScrollArea::new([false, true])
+                .auto_shrink([false, true])
+                .show(ui, |ui| {
+                    for storage in &self.rclone.storages {
+                        ui.separator();
+                        ui.label(format!("Name: {}", storage.name));
+                        ui.label(format!("Type: {}", storage.drive_type));
+                        ui.label(format!("Scope: {}", storage.scope));
+                        ui.label(format!(
+                            "Token expiry: {:?}",
+                            storage
+                                .token
+                                .expiry
+                                .format("%A, %-d %B %Y at %H:%M:%S")
+                                .to_string()
+                        ));
+                    }
+                });
         });
     }
 }

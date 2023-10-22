@@ -6,16 +6,45 @@ edition = "2021"
 rust-version = "1.71"
 
 [dependencies]
+# egui
 egui = "0.23.0"
 eframe = { version = "0.23.0", default-features = false, features = [
     "default_fonts",
     "wgpu",
 ] }
+
+# misc
 tray-item = "0.9.0"
 tokio = { version = "1.33.0", features = ["sync", "rt", "rt-multi-thread"] }
+chrono = "0.4.31"
+directories = "5.0"
+serde_json = "1.0.107"
+mountpoints = "0.2.1"
+notify = "6.1.1"
 
 [build-dependencies]
 windres = "0.2.2"
+
+[profile.release]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+panic = "unwind"
+codegen-units = 16
+lto = true
+incremental = false
+strip = "debuginfo"
+
+[profile.dev]
+opt-level = 0
+debug = true
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = 'unwind'
+incremental = true
+codegen-units = 256
 
 [package.metadata.scripts]
 run = "cargo run"
