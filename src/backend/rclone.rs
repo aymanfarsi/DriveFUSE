@@ -6,7 +6,7 @@ use std::{
     process::Command,
 };
 
-use crate::utils::{
+use crate::utilities::{
     enums::StorageType,
     utils::{add_google_drive_storage, add_onedrive_storage, rclone_config_path},
 };

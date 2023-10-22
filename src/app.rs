@@ -6,7 +6,7 @@ use tray_item::{IconSource, TrayItem};
 
 use crate::{
     backend::rclone::Rclone,
-    utils::{enums::Message, tray_menu::init_tray_menu, utils::rclone_config_path},
+    utilities::{enums::Message, tray_menu::init_tray_menu, utils::rclone_config_path},
 };
 
 pub struct RcloneApp {
@@ -42,6 +42,11 @@ impl RcloneApp {
 }
 
 impl eframe::App for RcloneApp {
+    fn on_close_event(&mut self) -> bool {
+        self.tx_egui.send(Message::HideApp).unwrap();
+        false
+    }
+
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         if self.is_first_run {
             self.is_first_run = false;
@@ -131,7 +136,7 @@ impl eframe::App for RcloneApp {
         }
 
         // * Handle messages from tray menu
-        while let Ok(message) = self.rx_egui.try_recv() {
+        if let Ok(message) = self.rx_egui.try_recv() {
             match message {
                 Message::Quit => {
                     frame.close();
@@ -159,10 +164,6 @@ impl eframe::App for RcloneApp {
             ui.menu_button("File", |ui| {
                 if ui.button("Hide").clicked() {
                     self.tx_egui.send(Message::HideApp).unwrap();
-                    ui.close_menu();
-                }
-                if ui.button("Quit").clicked() {
-                    self.tx_egui.send(Message::Quit).unwrap();
                     ui.close_menu();
                 }
             });
