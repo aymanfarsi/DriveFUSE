@@ -42,6 +42,7 @@ impl RcloneApp {
 
 impl eframe::App for RcloneApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        // * Spawn tray menu thread on first run
         if self.is_first_run {
             self.is_first_run = false;
 
@@ -93,6 +94,7 @@ impl eframe::App for RcloneApp {
             });
         }
 
+        // * Handle messages from tray menu
         while let Ok(message) = self.rx_egui.try_recv() {
             match message {
                 Message::Quit => {
@@ -113,6 +115,7 @@ impl eframe::App for RcloneApp {
             }
         }
 
+        // * Top panel
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.menu_button("File", |ui| {
                 if ui.button("Show/Hide").clicked() {
@@ -124,6 +127,8 @@ impl eframe::App for RcloneApp {
                 }
             });
         });
+
+        // * Central panel
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("My egui Application");
             ui.horizontal(|ui| {

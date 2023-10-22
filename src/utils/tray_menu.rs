@@ -33,7 +33,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
     tray.inner_mut().add_separator().unwrap();
 
     let quit_tx = tx.clone();
-    tray.add_menu_item("Quit (close app first)", move || {
+    tray.add_menu_item("Quit", move || {
         quit_tx.send(Message::Quit).unwrap();
     })
     .unwrap();
