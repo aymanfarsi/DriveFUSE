@@ -110,7 +110,6 @@ impl Rclone {
     }
 
     pub fn edit_storage_name(&mut self, name: String, storage: Storage) {
-        // change name in rclone config
         let output = Command::new("rclone")
             .arg("config")
             .arg("update")

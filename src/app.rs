@@ -5,17 +5,27 @@ use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use tray_item::{IconSource, TrayItem};
 
 use crate::{
-    backend::rclone::Rclone,
-    utilities::{enums::Message, tray_menu::init_tray_menu, utils::rclone_config_path},
+    backend::{mounting::MountingStorage, rclone::Rclone},
+    ui::{
+        mount_unmount::render_mount_unmount, settings::render_settings, top_panel::render_top_panel, manage::render_manage,
+    },
+    utilities::{
+        enums::{Message, Tab},
+        tray_menu::init_tray_menu,
+        utils::rclone_config_path,
+    },
 };
 
 pub struct RcloneApp {
-    rclone: Rclone,
+    pub rclone: Rclone,
+    pub mounted_storages: MountingStorage,
+
+    pub current_tab: Tab,
 
     is_first_run: bool,
     is_close_requested: bool,
 
-    tx_egui: SyncSender<Message>,
+    pub tx_egui: SyncSender<Message>,
     rx_egui: Receiver<Message>,
 }
 
@@ -33,6 +43,9 @@ impl RcloneApp {
 
         Self {
             rclone,
+            mounted_storages: MountingStorage::default(),
+
+            current_tab: Tab::MountUnmount,
 
             is_first_run: true,
             is_close_requested: false,
@@ -46,7 +59,13 @@ impl RcloneApp {
 impl eframe::App for RcloneApp {
     fn on_close_event(&mut self) -> bool {
         match self.is_close_requested {
-            true => true,
+            true => match self.mounted_storages.unmount_all() {
+                true => true,
+                false => {
+                    eprintln!("Failed to unmount all drives");
+                    false
+                }
+            },
             false => {
                 self.tx_egui.send(Message::HideApp).unwrap();
                 self.is_close_requested = true;
@@ -149,6 +168,7 @@ impl eframe::App for RcloneApp {
         if let Ok(message) = self.rx_egui.try_recv() {
             match message {
                 Message::Quit => {
+                    // ! unmount all drives
                     self.is_close_requested = true;
                     frame.close();
                 }
@@ -171,38 +191,13 @@ impl eframe::App for RcloneApp {
         }
 
         // * Top panel
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            ui.menu_button("File", |ui| {
-                if ui.button("Hide").clicked() {
-                    self.tx_egui.send(Message::HideApp).unwrap();
-                    ui.close_menu();
-                }
-            });
-        });
+        render_top_panel(ctx, self);
 
-        // * Central panel
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("RcloneApp");
-            let count_storages = self.rclone.storages.len();
-            ui.label(format!("Storages: {}", count_storages));
-            egui::ScrollArea::new([false, true])
-                .auto_shrink([false, true])
-                .show(ui, |ui| {
-                    for storage in &self.rclone.storages {
-                        ui.separator();
-                        ui.label(format!("Name: {}", storage.name));
-                        ui.label(format!("Type: {}", storage.drive_type));
-                        ui.label(format!("Scope: {}", storage.scope));
-                        ui.label(format!(
-                            "Token expiry: {:?}",
-                            storage
-                                .token
-                                .expiry
-                                .format("%A, %-d %B %Y at %H:%M:%S")
-                                .to_string()
-                        ));
-                    }
-                });
-        });
+        // * Tab content
+        match self.current_tab {
+            Tab::MountUnmount => render_mount_unmount(ctx, self),
+            Tab::Manage => render_manage(ctx, self),
+            Tab::Settings => render_settings(ctx, self),
+        };
     }
 }

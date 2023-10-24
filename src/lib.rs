@@ -9,8 +9,12 @@ pub mod utilities {
 pub use app::RcloneApp;
 pub mod backend {
     pub mod mounting;
+    pub mod mounting_options;
     pub mod rclone;
 }
 pub mod ui {
-    pub mod main_page;
+    pub mod manage;
+    pub mod mount_unmount;
+    pub mod settings;
+    pub mod top_panel;
 }

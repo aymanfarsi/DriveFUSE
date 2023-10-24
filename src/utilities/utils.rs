@@ -1,5 +1,17 @@
 use directories::BaseDirs;
 use std::{path::PathBuf, process::Command};
+use windows::Win32;
+
+pub fn available_drives() -> Vec<char> {
+    let drive_letters = unsafe { Win32::Storage::FileSystem::GetLogicalDrives() };
+    let mut available_drives = vec![];
+    for i in 0..26 {
+        if drive_letters & (1 << i) == 0 {
+            available_drives.push((i + 65) as u8 as char);
+        }
+    }
+    available_drives
+}
 
 pub fn rclone_config_path() -> Option<PathBuf> {
     BaseDirs::new().map(|base_dirs| base_dirs.config_dir().join("rclone"))
