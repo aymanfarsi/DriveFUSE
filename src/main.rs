@@ -1,4 +1,4 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![windows_subsystem = "windows"]
 
 use std::{
     path::Path,
@@ -10,13 +10,13 @@ use tokio::runtime::Runtime;
 
 fn main() {
     let platform = std::env::consts::OS;
+    let missing_dependencies = check_dependencies(platform);
+    if !missing_dependencies.is_empty() {
+        println!("Missing dependencies: {}", missing_dependencies.join(", "));
+        println!("Please install them and try again!");
+        exit(1);
+    }
     if platform == "windows" {
-        let missing_dependencies = check_dependencies_windows();
-        if !missing_dependencies.is_empty() {
-            println!("Missing dependencies: {:?}", missing_dependencies);
-            println!("Please install them and try again!");
-            exit(1);
-        }
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
 
@@ -38,12 +38,39 @@ fn main() {
     }
 }
 
-fn check_dependencies_windows() -> Vec<String> {
+fn check_dependencies(platform: &str) -> Vec<String> {
     let mut missing_dependencies = Vec::new();
 
-    // Chek if WinFsp is installed
-    if !Path::new("C:/Program Files (x86)/WinFsp").exists() {
-        missing_dependencies.push("WinFsp".to_string());
+    match platform {
+        "windows" => {
+            // Check if WinFsp is installed
+            if !Path::new("C:/Program Files (x86)/WinFsp").exists() {
+                missing_dependencies.push("WinFsp".to_string());
+            }
+        }
+        "linux" => {
+            // Check if FUSE is installed
+            let output = Command::new("pkg-config")
+                .arg("--exists")
+                .arg("fuse")
+                .output()
+                .unwrap();
+            if !output.status.success() {
+                missing_dependencies.push("FUSE".to_string());
+            }
+        }
+        "macos" => {
+            // Check if FUSE is installed
+            let output = Command::new("pkg-config")
+                .arg("--exists")
+                .arg("fuse")
+                .output()
+                .unwrap();
+            if !output.status.success() {
+                missing_dependencies.push("FUSE".to_string());
+            }
+        }
+        _ => {}
     }
 
     // Check if Rclone is installed

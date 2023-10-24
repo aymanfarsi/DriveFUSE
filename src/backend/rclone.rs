@@ -44,8 +44,8 @@ impl Rclone {
     fn read_config() -> Vec<String> {
         let rclone_config_path = rclone_config_path().unwrap().join("rclone.conf");
         let file = OpenOptions::new()
-            .write(false)
-            .create(false)
+            .write(true)
+            .create(true)
             .read(true)
             .open(&rclone_config_path)
             .unwrap();
