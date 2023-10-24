@@ -1,4 +1,6 @@
-use std::{collections::HashMap, process::Command};
+use std::{collections::HashMap, os::windows::process::CommandExt, process::Command};
+
+use winapi::um::winbase;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MountingStorage {
@@ -9,9 +11,7 @@ impl Default for MountingStorage {
     fn default() -> Self {
         let hash = HashMap::new();
 
-        Self {
-            drives: hash,
-        }
+        Self { drives: hash }
     }
 }
 
@@ -92,6 +92,7 @@ impl MountingStorage {
             .arg("--vfs-cache-mode")
             .arg("full")
             // .arg("--network-mode")
+            .creation_flags(winbase::CREATE_NO_WINDOW)
             .spawn();
 
         match process {
@@ -108,6 +109,7 @@ impl MountingStorage {
             .arg("/F")
             .arg("/PID")
             .arg(&id.to_string())
+            .creation_flags(winbase::CREATE_NO_WINDOW)
             .spawn()
             .expect("failed to execute process");
 

@@ -1,5 +1,6 @@
 use directories::BaseDirs;
-use std::{path::PathBuf, process::Command};
+use std::{os::windows::process::CommandExt, path::PathBuf, process::Command};
+use winapi::um::winbase;
 use windows::Win32;
 
 pub fn available_drives() -> Vec<char> {
@@ -28,6 +29,7 @@ pub fn add_google_drive_storage(name: String) {
                 String::from("config_is_local"),
                 String::from("true"),
             ])
+            .creation_flags(winbase::CREATE_NO_WINDOW)
             .spawn()
             .unwrap();
     });
@@ -44,6 +46,7 @@ pub fn add_onedrive_storage(name: String) {
                 String::from("config_is_local"),
                 String::from("true"),
             ])
+            .creation_flags(winbase::CREATE_NO_WINDOW)
             .spawn()
             .unwrap();
     });

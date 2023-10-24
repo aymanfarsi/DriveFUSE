@@ -3,8 +3,10 @@ use serde_json::Value;
 use std::{
     fs::OpenOptions,
     io::{BufRead, BufReader, Write},
+    os::windows::process::CommandExt,
     process::Command,
 };
+use winapi::um::winbase;
 
 use crate::utilities::{
     enums::StorageType,
@@ -176,6 +178,7 @@ impl Rclone {
             .arg("config")
             .arg("delete")
             .arg(name.clone())
+            .creation_flags(winbase::CREATE_NO_WINDOW)
             .output()
             .expect("failed to execute process");
         match String::from_utf8(output.stdout) {

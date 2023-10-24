@@ -1594,6 +1594,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tray-item",
+ "winapi",
  "windows 0.51.1",
  "windres",
 ]
