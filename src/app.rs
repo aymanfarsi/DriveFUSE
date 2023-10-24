@@ -22,6 +22,10 @@ pub struct RcloneApp {
 
     pub current_tab: Tab,
 
+    pub selected_storage: Option<String>,
+    pub new_storage_name: String,
+    pub edit_storage_name: String,
+
     is_first_run: bool,
     is_close_requested: bool,
 
@@ -46,6 +50,10 @@ impl RcloneApp {
             mounted_storages: MountingStorage::default(),
 
             current_tab: Tab::MountUnmount,
+
+            selected_storage: None,
+            new_storage_name: String::new(),
+            edit_storage_name: String::new(),
 
             is_first_run: true,
             is_close_requested: false,

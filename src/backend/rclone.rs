@@ -2,7 +2,7 @@ use chrono::{DateTime, FixedOffset};
 use serde_json::Value;
 use std::{
     fs::OpenOptions,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Write},
     process::Command,
 };
 
@@ -41,7 +41,7 @@ impl Rclone {
         rclone
     }
 
-    fn parse_storages(&self) -> Vec<Storage> {
+    fn read_config() -> Vec<String> {
         let rclone_config_path = rclone_config_path().unwrap().join("rclone.conf");
         let file = OpenOptions::new()
             .write(false)
@@ -51,6 +51,43 @@ impl Rclone {
             .unwrap();
         let buffered = BufReader::new(file);
 
+        let mut lines: Vec<String> = Vec::new();
+
+        for line in buffered.lines() {
+            lines.push(line.unwrap());
+        }
+
+        lines
+    }
+
+    fn write_config(lines: Vec<String>, file_name: Option<String>) {
+        let rclone_config_path = rclone_config_path().unwrap().join({
+            match file_name.clone() {
+                Some(val) => val,
+                None => "rclone.conf".to_string(),
+            }
+        });
+        let file = OpenOptions::new()
+            .write(true)
+            .create(file_name.is_some())
+            .truncate(true)
+            .open(&rclone_config_path)
+            .unwrap();
+        let mut buffered = BufReader::new(file);
+
+        for line in lines {
+            buffered
+                .get_mut()
+                .write_all(line.as_bytes())
+                .expect("couldnt write to file");
+            buffered
+                .get_mut()
+                .write_all("\n".as_bytes())
+                .expect("couldnt write to file");
+        }
+    }
+
+    fn parse_storages(&self) -> Vec<Storage> {
         let mut drive_name = String::new();
         let mut drive_type = String::new();
         let mut drive_scope = String::new();
@@ -58,8 +95,7 @@ impl Rclone {
 
         let mut storages: Vec<Storage> = Vec::new();
 
-        for line in buffered.lines() {
-            let line = line.unwrap();
+        for line in Self::read_config() {
             if line.is_empty() {
                 storages.push(Storage {
                     name: drive_name.clone(),
@@ -109,25 +145,29 @@ impl Rclone {
         }
     }
 
-    pub fn edit_storage_name(&mut self, name: String, storage: Storage) {
-        let output = Command::new("rclone")
-            .arg("config")
-            .arg("update")
-            .arg(name.clone())
-            .arg("name")
-            .arg(storage.name.clone())
-            .output()
-            .expect("failed to execute process");
-        match String::from_utf8(output.stdout) {
-            Ok(_) => {
-                let index = self
-                    .storages
-                    .iter()
-                    .position(|storage| storage.name == name)
-                    .unwrap();
-                self.storages[index] = storage;
+    pub fn edit_storage_name(&mut self, old_name: String, new_name: String) {
+        let lines = Self::read_config();
+
+        let mut new_lines: Vec<String> = Vec::new();
+
+        let mut is_updated = false;
+
+        for line in lines {
+            if line.starts_with('[') && !is_updated {
+                if line.get(1..line.len() - 1).unwrap() == old_name {
+                    new_lines.push(format!("[{}]", new_name));
+                    is_updated = true;
+                } else {
+                    new_lines.push(line);
+                }
+            } else {
+                new_lines.push(line);
             }
-            Err(_) => eprintln!("Error renaming storage"),
+        }
+
+        match is_updated {
+            true => Self::write_config(new_lines, None),
+            false => eprintln!("Error updating storage name"),
         }
     }
 
@@ -142,5 +182,11 @@ impl Rclone {
             Ok(_) => self.storages.retain(|storage| storage.name != name),
             Err(_) => eprintln!("Error removing storage"),
         }
+    }
+
+    pub fn create_backup(&self) {
+        let lines = Self::read_config();
+        let datetime = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S");
+        Self::write_config(lines, Some(format!("rclone_{}.conf", datetime)));
     }
 }
