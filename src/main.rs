@@ -1,12 +1,14 @@
 #![windows_subsystem = "windows"]
 
 use std::{
+    os::windows::process::CommandExt,
     path::Path,
     process::{exit, Command},
 };
 
 use rclone_app::RcloneApp;
 use tokio::runtime::Runtime;
+use winapi::um::winbase;
 
 fn main() {
     let platform = std::env::consts::OS;
@@ -53,6 +55,7 @@ fn check_dependencies(platform: &str) -> Vec<String> {
             let output = Command::new("pkg-config")
                 .arg("--exists")
                 .arg("fuse")
+                .creation_flags(winbase::CREATE_NO_WINDOW)
                 .output()
                 .unwrap();
             if !output.status.success() {
@@ -64,6 +67,7 @@ fn check_dependencies(platform: &str) -> Vec<String> {
             let output = Command::new("pkg-config")
                 .arg("--exists")
                 .arg("fuse")
+                .creation_flags(winbase::CREATE_NO_WINDOW)
                 .output()
                 .unwrap();
             if !output.status.success() {
@@ -74,7 +78,11 @@ fn check_dependencies(platform: &str) -> Vec<String> {
     }
 
     // Check if Rclone is installed
-    let output = Command::new("rclone").arg("--version").output().unwrap();
+    let output = Command::new("rclone")
+        .arg("--version")
+        .creation_flags(winbase::CREATE_NO_WINDOW)
+        .output()
+        .unwrap();
     if !output.status.success() {
         missing_dependencies.push("Rclone".to_string());
     }

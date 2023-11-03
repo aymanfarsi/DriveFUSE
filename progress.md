@@ -1,0 +1,12 @@
+- add option to select drive letter
+- add logging
+- add error handling
+- debug adding, editing, and removing storage
+- add option to start on boot
+- add option to automount on start
+- improve main page
+- improve manage storages page
+- improve settings page (expendable sections)
+- make system tray useful
+- update app name and icon
+
