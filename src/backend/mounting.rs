@@ -5,13 +5,15 @@ use winapi::um::winbase;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MountingStorage {
     drives: HashMap<String, u32>,
+    mounted: HashMap<String, char>,
 }
 
 impl Default for MountingStorage {
     fn default() -> Self {
-        let hash = HashMap::new();
+        let drives = HashMap::new();
+        let mounted = HashMap::new();
 
-        Self { drives: hash }
+        Self { drives, mounted }
     }
 }
 
@@ -22,6 +24,10 @@ impl MountingStorage {
 
     pub fn is_mounted(&self, name: String) -> bool {
         self.drives.contains_key(&name)
+    }
+
+    pub fn get_mounted(&self, name: String) -> Option<String> {
+        self.mounted.get(&name)
     }
 
     pub fn unmount_all(&self) -> bool {
@@ -54,6 +60,8 @@ impl MountingStorage {
                     Some(id) => {
                         println!("Mounted {} to {}", name, driver_letter);
                         self.drives.insert(name, id);
+                        self.mounted
+                            .insert(name, driver_letter.chars().next().unwrap());
                     }
                     None => {
                         eprintln!("Failed to mount {} to {}", name, driver_letter);
@@ -74,6 +82,7 @@ impl MountingStorage {
                 let success = Self::unmount_windows(process_id);
                 if success {
                     self.drives.remove(&driver_letter);
+                    self.mounted.remove(&driver_letter);
                 } else {
                     eprintln!("Failed to unmount {}", driver_letter);
                 }

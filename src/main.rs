@@ -3,7 +3,7 @@
 use std::{
     os::windows::process::CommandExt,
     path::Path,
-    process::{exit, Command},
+    process::{exit, Command}, env,
 };
 
 use rclone_app::RcloneApp;
@@ -11,13 +11,14 @@ use tokio::runtime::Runtime;
 use winapi::um::winbase;
 
 fn main() {
-    let platform = std::env::consts::OS;
+    let platform = env::consts::OS;
     let missing_dependencies = check_dependencies(platform);
     if !missing_dependencies.is_empty() {
         println!("Missing dependencies: {}", missing_dependencies.join(", "));
         println!("Please install them and try again!");
         exit(1);
     }
+
     if platform == "windows" {
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();

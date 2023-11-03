@@ -1,7 +1,42 @@
-use directories::BaseDirs;
+use auto_launch::AutoLaunchBuilder;
+use directories::{BaseDirs, UserDirs};
 use std::{os::windows::process::CommandExt, path::PathBuf, process::Command};
 use winapi::um::winbase;
 use windows::Win32;
+
+pub fn enable_auto_start_app() {
+    let auto = AutoLaunchBuilder::new()
+        .set_app_name("RcloneApp")
+        .set_app_path(env::current_exe().unwrap().to_str().unwrap())
+        .set_args(&["--minimized"])
+        .build()
+        .unwrap();
+    if !auto.is_enabled().unwrap() {
+        auto.enable().unwrap();
+    }
+}
+
+pub fn is_app_auto_start() -> bool {
+    let auto = AutoLaunchBuilder::new()
+        .set_app_name("RcloneApp")
+        .set_app_path(env::current_exe().unwrap().to_str().unwrap())
+        .set_args(&["--minimized"])
+        .build()
+        .unwrap();
+    auto.is_enabled().unwrap()
+}
+
+pub fn disable_auto_start_app() {
+    let auto = AutoLaunchBuilder::new()
+        .set_app_name("RcloneApp")
+        .set_app_path(env::current_exe().unwrap().to_str().unwrap())
+        .set_args(&["--minimized"])
+        .build()
+        .unwrap();
+    if auto.is_enabled().unwrap() {
+        auto.disable().unwrap();
+    }
+}
 
 pub fn available_drives() -> Vec<char> {
     let drive_letters = unsafe { Win32::Storage::FileSystem::GetLogicalDrives() };
@@ -16,6 +51,10 @@ pub fn available_drives() -> Vec<char> {
 
 pub fn rclone_config_path() -> Option<PathBuf> {
     BaseDirs::new().map(|base_dirs| base_dirs.config_dir().join("rclone"))
+}
+
+pub fn app_config_path() -> Option<PathBuf> {
+    UserDirs::new().map(|user_dirs| user_dirs.document_dir().join("rclone_app"))
 }
 
 pub fn add_google_drive_storage(name: String) {

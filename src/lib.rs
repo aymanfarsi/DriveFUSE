@@ -8,6 +8,7 @@ pub mod utilities {
 }
 pub use app::RcloneApp;
 pub mod backend {
+    pub mod app_config;
     pub mod mounting;
     pub mod mounting_options;
     pub mod rclone;

@@ -5,9 +5,10 @@ use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use tray_item::{IconSource, TrayItem};
 
 use crate::{
-    backend::{mounting::MountingStorage, rclone::Rclone},
+    backend::{app_config::AppConfig, mounting::MountingStorage, rclone::Rclone},
     ui::{
-        mount_unmount::render_mount_unmount, settings::render_settings, top_panel::render_top_panel, manage::render_manage,
+        manage::render_manage, mount_unmount::render_mount_unmount, settings::render_settings,
+        top_panel::render_top_panel,
     },
     utilities::{
         enums::{Message, Tab},
@@ -17,6 +18,7 @@ use crate::{
 };
 
 pub struct RcloneApp {
+    pub app_config: AppConfig,
     pub rclone: Rclone,
     pub mounted_storages: MountingStorage,
 
@@ -24,6 +26,7 @@ pub struct RcloneApp {
 
     pub selected_storage: Option<String>,
     pub new_storage_name: String,
+    pub new_storage_drive_letter: String,
     pub edit_storage_name: String,
 
     is_first_run: bool,
@@ -43,9 +46,11 @@ impl RcloneApp {
     pub fn new() -> Self {
         let (tx_egui, rx_egui) = std::sync::mpsc::sync_channel(1);
 
+        let app_config = AppConfig::init();
         let rclone = Rclone::init();
 
         Self {
+            app_config,
             rclone,
             mounted_storages: MountingStorage::default(),
 
@@ -53,6 +58,7 @@ impl RcloneApp {
 
             selected_storage: None,
             new_storage_name: String::new(),
+            new_storage_drive_letter: String::new(),
             edit_storage_name: String::new(),
 
             is_first_run: true,
