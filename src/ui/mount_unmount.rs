@@ -53,7 +53,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                 ui.label(
                                     app.mounted_storages
                                         .get_mounted(storage.name.clone())
-                                        .unwrap_or("".to_owned()),
+                                        .unwrap_or("N/A".to_owned()),
                                 );
                             } else {
                                 ComboBox::from_id_source("drive_letter")
@@ -73,6 +73,10 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                 if is_mounted {
                                     app.mounted_storages.unmount(storage.name.clone());
                                 } else {
+                                    if app.new_storage_drive_letter == *"N/A" {
+                                        app.new_storage_drive_letter =
+                                            available_drives[0].to_string();
+                                    }
                                     app.mounted_storages.mount(
                                         app.new_storage_drive_letter.clone(),
                                         storage.name.clone(),

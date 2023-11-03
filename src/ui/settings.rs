@@ -1,6 +1,6 @@
 use egui::{Button, CentralPanel, Context, ScrollArea};
 
-use crate::{utilities::utils::{is_app_auto_start, disable_auto_start_app, enable_auto_start_app}, RcloneApp};
+use crate::{utilities::utils::{is_app_auto_start, disable_auto_start_app, enable_auto_start_app, enable_auto_mount, disable_auto_mount}, RcloneApp};
 
 pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
     CentralPanel::default().show(ctx, |ui| {
@@ -55,6 +55,27 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                             disable_auto_start_app();
                         } else {
                             enable_auto_start_app();
+                        }
+                    }
+                });
+
+                ui.add_space(8.0);
+
+                ui.horizontal(|ui| {
+                    ui.label("Auto mount:");
+                    let is_auto_mount = app.app_config.is_auto_mount;
+                    if ui
+                        .add(Button::new(if is_auto_mount {
+                            "Disable"
+                        } else {
+                            "Enable"
+                        }))
+                        .clicked()
+                    {
+                        if is_auto_mount {
+                            disable_auto_mount(app);
+                        } else {
+                            enable_auto_mount(app);
                         }
                     }
                 });

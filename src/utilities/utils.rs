@@ -4,6 +4,18 @@ use std::{os::windows::process::CommandExt, path::PathBuf, process::Command, env
 use winapi::um::winbase;
 use windows::Win32;
 
+use crate::RcloneApp;
+
+pub fn enable_auto_mount(app: &mut RcloneApp) {
+    app.app_config.is_auto_mount = true;
+    app.app_config.save();
+}
+
+pub fn disable_auto_mount(app: &mut RcloneApp) {
+    app.app_config.is_auto_mount = false;
+    app.app_config.save();
+}
+
 pub fn enable_auto_start_app() {
     let auto = AutoLaunchBuilder::new()
         .set_app_name("RcloneApp")

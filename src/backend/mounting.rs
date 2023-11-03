@@ -1,6 +1,11 @@
 use std::{collections::HashMap, os::windows::process::CommandExt, process::Command};
 
+use directories::UserDirs;
 use winapi::um::winbase;
+
+use crate::utilities::utils::available_drives;
+
+use super::rclone::Storage;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MountingStorage {
@@ -28,6 +33,38 @@ impl MountingStorage {
 
     pub fn get_mounted(&self, name: String) -> Option<String> {
         self.mounted.get(&name).map(|c| c.to_string())
+    }
+
+    pub fn mount_all(&mut self, drives: Vec<Storage>) -> bool {
+        let platform = std::env::consts::OS;
+        match platform {
+            "windows" => {
+                let mut success = true;
+                let mut available_drives = available_drives();
+                for drive in drives {
+                    let next_drive = available_drives.first().unwrap().to_string();
+                    let id = Self::mount_windows(drive.name.clone(), next_drive.clone());
+                    match id {
+                        Some(id) => {
+                            available_drives.remove(0);
+                            println!("Mounted {} to {}", drive.name, next_drive);
+                            self.drives.insert(drive.name.clone(), id);
+                            self.mounted
+                                .insert(drive.name, next_drive.chars().next().unwrap());
+                        }
+                        None => {
+                            eprintln!("Failed to mount {} to {}", drive.name, next_drive);
+                            success = false;
+                        }
+                    }
+                }
+                success
+            }
+            _ => {
+                eprintln!("This platform {} is not supported yet!", platform);
+                false
+            }
+        }
     }
 
     pub fn unmount_all(&self) -> bool {
@@ -94,6 +131,14 @@ impl MountingStorage {
     }
 
     fn mount_windows(name: String, driver_letter: String) -> Option<u32> {
+        let doc_app = UserDirs::new()
+            .unwrap()
+            .document_dir()
+            .unwrap()
+            .join("rclone_app")
+            .to_str()
+            .unwrap()
+            .to_owned();
         let process = Command::new("rclone")
             .arg("mount")
             .arg(format!("{}:", name))
@@ -102,6 +147,18 @@ impl MountingStorage {
             .arg("full")
             .arg("--volname")
             .arg(name.clone())
+            // .arg("--dir-cache-time")
+            // .arg("1000h")
+            .arg("--log-level")
+            .arg("NOTICE")
+            .arg("--log-file")
+            .arg(format!("{}/rclone-{}.log", doc_app, name))
+            // .arg("--vfs-cache-max-size")
+            // .arg("100G")
+            // .arg("--drive-chunk-size")
+            // .arg("32M")
+            // .arg("--buffer-size")
+            // .arg("64M")
             .creation_flags(winbase::CREATE_NO_WINDOW)
             .spawn();
 

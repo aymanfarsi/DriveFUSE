@@ -68,7 +68,3 @@ lto = false
 panic = 'unwind'
 incremental = true
 codegen-units = 256
-
-[package.metadata.scripts]
-run = "cargo run"
-build = "cargo build -r"

@@ -58,7 +58,7 @@ impl RcloneApp {
 
             selected_storage: None,
             new_storage_name: String::new(),
-            new_storage_drive_letter: String::new(),
+            new_storage_drive_letter: String::from("N/A"),
             edit_storage_name: String::new(),
 
             is_first_run: true,
@@ -176,6 +176,12 @@ impl eframe::App for RcloneApp {
                     }
                 }
             });
+
+            // * Auto mount drives on startup
+            if self.app_config.is_auto_mount {
+                self.mounted_storages
+                    .mount_all(self.rclone.storages.clone());
+            }
         }
 
         // * Handle messages from tray menu
