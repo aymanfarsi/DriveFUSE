@@ -1,6 +1,6 @@
 use egui::{Button, CentralPanel, Context, ScrollArea};
 
-use crate::{utilities::utils::is_app_auto_start, RcloneApp};
+use crate::{utilities::utils::{is_app_auto_start, disable_auto_start_app, enable_auto_start_app}, RcloneApp};
 
 pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
     CentralPanel::default().show(ctx, |ui| {
@@ -11,7 +11,6 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
         ScrollArea::new([false, true])
             .auto_shrink([false; 2])
             .show(ui, |ui| {
-                // add expandable section
                 ui.collapsing("Config file", |ui| {
                     ui.horizontal(|ui| {
                         ui.label("Backup rclone config file:");

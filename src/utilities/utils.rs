@@ -1,6 +1,6 @@
 use auto_launch::AutoLaunchBuilder;
 use directories::{BaseDirs, UserDirs};
-use std::{os::windows::process::CommandExt, path::PathBuf, process::Command};
+use std::{os::windows::process::CommandExt, path::PathBuf, process::Command, env};
 use winapi::um::winbase;
 use windows::Win32;
 
@@ -54,7 +54,7 @@ pub fn rclone_config_path() -> Option<PathBuf> {
 }
 
 pub fn app_config_path() -> Option<PathBuf> {
-    UserDirs::new().map(|user_dirs| user_dirs.document_dir().join("rclone_app"))
+    UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("rclone_app"))
 }
 
 pub fn add_google_drive_storage(name: String) {

@@ -27,7 +27,7 @@ impl MountingStorage {
     }
 
     pub fn get_mounted(&self, name: String) -> Option<String> {
-        self.mounted.get(&name)
+        self.mounted.get(&name).map(|c| c.to_string())
     }
 
     pub fn unmount_all(&self) -> bool {
@@ -59,7 +59,7 @@ impl MountingStorage {
                 match id {
                     Some(id) => {
                         println!("Mounted {} to {}", name, driver_letter);
-                        self.drives.insert(name, id);
+                        self.drives.insert(name.clone(), id);
                         self.mounted
                             .insert(name, driver_letter.chars().next().unwrap());
                     }
@@ -100,7 +100,8 @@ impl MountingStorage {
             .arg(format!("{}:", driver_letter))
             .arg("--vfs-cache-mode")
             .arg("full")
-            // .arg("--network-mode")
+            .arg("--volname")
+            .arg(name.clone())
             .creation_flags(winbase::CREATE_NO_WINDOW)
             .spawn();
 

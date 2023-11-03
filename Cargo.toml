@@ -3,7 +3,8 @@ name = "rclone_app"
 version = "0.1.7"
 authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
-rust-version = "1.71"
+rust-version = "1.70"
+build = "build.rs"
 
 [dependencies]
 # gui
@@ -20,7 +21,8 @@ notify = "6.1.1"
 
 # parsing
 chrono = "0.4.31"
-serde_json = "1.0.107"
+serde = { version = "1.0.190", features = ["derive"] }
+serde_json = { version = "1.0.108" }
 
 # misc
 tokio = { version = "1.33.0", features = [

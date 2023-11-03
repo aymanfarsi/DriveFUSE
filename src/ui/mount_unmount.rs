@@ -1,5 +1,4 @@
 use egui::{CentralPanel, Color32, ComboBox, Context, Grid, RichText, ScrollArea};
-use rand::{seq::SliceRandom, thread_rng};
 
 use crate::{utilities::utils::available_drives, RcloneApp};
 
@@ -31,7 +30,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
 
                         for storage in &app.rclone.storages {
                             let is_mounted = app.mounted_storages.is_mounted(storage.name.clone());
-                            let mut available_drives = available_drives();
+                            let available_drives = available_drives();
 
                             let status_text = if is_mounted {
                                 RichText::new("Mounted").color(Color32::GREEN)
@@ -57,26 +56,27 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                         .unwrap_or("".to_owned()),
                                 );
                             } else {
-                                ui.add(
-                                    ComboBox::from_id_source("drive_letter")
-                                        .selected_text("N/A")
-                                        .show_ui(ui, |ui| {
-                                            for drive in &available_drives {
-                                                ui.selectable_value(
-                                                    &mut app.new_storage_drive_letter,
-                                                    drive.to_string(),
-                                                    drive.to_string(),
-                                                );
-                                            }
-                                        }),
-                                );
+                                ComboBox::from_id_source("drive_letter")
+                                    .selected_text(app.new_storage_drive_letter.clone())
+                                    .width(70.)
+                                    .show_ui(ui, |ui| {
+                                        for drive in &available_drives {
+                                            ui.selectable_value(
+                                                &mut app.new_storage_drive_letter,
+                                                drive.to_string(),
+                                                drive.to_string(),
+                                            );
+                                        }
+                                    });
                             }
                             if ui.button(action_text).clicked() {
                                 if is_mounted {
                                     app.mounted_storages.unmount(storage.name.clone());
                                 } else {
-                                    app.mounted_storages
-                                        .mount(app.new_storage_drive_letter, storage.name.clone());
+                                    app.mounted_storages.mount(
+                                        app.new_storage_drive_letter.clone(),
+                                        storage.name.clone(),
+                                    );
                                 }
                             }
                             ui.end_row();

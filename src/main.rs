@@ -1,9 +1,10 @@
 #![windows_subsystem = "windows"]
 
 use std::{
+    env,
     os::windows::process::CommandExt,
     path::Path,
-    process::{exit, Command}, env,
+    process::{exit, Command},
 };
 
 use rclone_app::RcloneApp;
@@ -30,8 +31,8 @@ fn main() {
             decorated: true,
             transparent: false,
             resizable: false,
-            min_window_size: Some(egui::Vec2::new(400.0, 250.0)),
-            initial_window_size: Some(egui::Vec2::new(400.0, 200.0)),
+            min_window_size: Some(egui::Vec2::new(430.0, 250.0)),
+            initial_window_size: Some(egui::Vec2::new(430.0, 250.0)),
             ..Default::default()
         };
         let _ = eframe::run_native("Rclone App", native_options, Box::new(|_cc| Box::new(app)));

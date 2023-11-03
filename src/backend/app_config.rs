@@ -1,11 +1,15 @@
-use std::fs::{self, File};
+use std::{
+    fs::{self, File},
+    io::{BufRead, BufReader, Write},
+};
+
+use serde::{Deserialize, Serialize};
 
 use crate::utilities::utils::app_config_path;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AppConfig {
     pub is_first_run: bool,
-    pub is_auto_start: bool,
 }
 
 impl AppConfig {
@@ -16,13 +20,9 @@ impl AppConfig {
             fs::create_dir_all(&config_path).unwrap();
             let mut file = File::create(&config_path.join("config.json")).unwrap();
 
-            let json = serde_json::to_string_pretty(&AppConfig {
-                is_first_run: true,
-                is_auto_start: false,
-            })
-            .unwrap();
+            let json = serde_json::to_string_pretty(&AppConfig { is_first_run: true }).unwrap();
 
-            file.write_all(json).unwrap();
+            file.write_all(json.as_bytes()).unwrap();
         }
 
         let file = File::open(&config_path.join("config.json")).unwrap();
