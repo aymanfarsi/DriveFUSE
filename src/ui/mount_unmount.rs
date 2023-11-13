@@ -1,6 +1,9 @@
 use egui::{CentralPanel, Color32, ComboBox, Context, Grid, RichText, ScrollArea};
 
-use crate::{utilities::utils::available_drives, RcloneApp};
+#[cfg(target_os = "windows")]
+use crate::utilities::utils::available_drives;
+
+use crate::RcloneApp;
 
 pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
     CentralPanel::default().show(ctx, |ui| {
@@ -30,6 +33,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
 
                         for storage in &app.rclone.storages {
                             let is_mounted = app.mounted_storages.is_mounted(storage.name.clone());
+                            #[cfg(target_os = "windows")]
                             let available_drives = available_drives();
 
                             let status_text = if is_mounted {
@@ -60,6 +64,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                     .selected_text(app.new_storage_drive_letter.clone())
                                     .width(70.)
                                     .show_ui(ui, |ui| {
+                                        #[cfg(target_os = "windows")]
                                         for drive in &available_drives {
                                             ui.selectable_value(
                                                 &mut app.new_storage_drive_letter,
@@ -69,6 +74,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                         }
                                     });
                             }
+                            #[cfg(target_os = "windows")]
                             if ui.button(action_text).clicked() {
                                 if is_mounted {
                                     app.mounted_storages.unmount(storage.name.clone());

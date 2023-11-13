@@ -1,9 +1,12 @@
-use std::{collections::HashMap, os::windows::process::CommandExt, process::Command};
+use std::{collections::HashMap, process::Command};
 
 use directories::UserDirs;
-use winapi::um::winbase;
 
-use crate::utilities::utils::available_drives;
+#[cfg(target_os = "windows")]
+use {
+    crate::utilities::utils::available_drives, os::windows::process::CommandExt,
+    winapi::um::winbase,
+};
 
 use super::rclone::Storage;
 
@@ -36,34 +39,40 @@ impl MountingStorage {
     }
 
     pub fn mount_all(&mut self, drives: Vec<Storage>) -> bool {
-        let platform = std::env::consts::OS;
-        match platform {
-            "windows" => {
-                let mut success = true;
-                let mut available_drives = available_drives();
-                for drive in drives {
-                    let next_drive = available_drives.first().unwrap().to_string();
-                    let id = Self::mount_windows(drive.name.clone(), next_drive.clone());
-                    match id {
-                        Some(id) => {
-                            available_drives.remove(0);
-                            println!("Mounted {} to {}", drive.name, next_drive);
-                            self.drives.insert(drive.name.clone(), id);
-                            self.mounted
-                                .insert(drive.name, next_drive.chars().next().unwrap());
-                        }
-                        None => {
-                            eprintln!("Failed to mount {} to {}", drive.name, next_drive);
-                            success = false;
-                        }
+        #[cfg(target_os = "windows")]
+        {
+            let mut success = true;
+            let mut available_drives = available_drives();
+            for drive in drives {
+                let next_drive = available_drives.first().unwrap().to_string();
+                let id = Self::mount_windows(drive.name.clone(), next_drive.clone());
+                match id {
+                    Some(id) => {
+                        available_drives.remove(0);
+                        println!("Mounted {} to {}", drive.name, next_drive);
+                        self.drives.insert(drive.name.clone(), id);
+                        self.mounted
+                            .insert(drive.name, next_drive.chars().next().unwrap());
+                    }
+                    None => {
+                        eprintln!("Failed to mount {} to {}", drive.name, next_drive);
+                        success = false;
                     }
                 }
-                success
             }
-            _ => {
-                eprintln!("This platform {} is not supported yet!", platform);
-                false
-            }
+            success
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            eprintln!("Linux is not supported yet!");
+            false
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            eprintln!("MacOS is not supported yet!");
+            false
         }
     }
 
@@ -139,7 +148,8 @@ impl MountingStorage {
             .to_str()
             .unwrap()
             .to_owned();
-        let process = Command::new("rclone")
+        let mut cmd = Command::new("rclone");
+        let process = cmd
             .arg("mount")
             .arg(format!("{}:", name))
             .arg(format!("{}:", driver_letter))
@@ -152,15 +162,16 @@ impl MountingStorage {
             .arg("--log-level")
             .arg("NOTICE")
             .arg("--log-file")
-            .arg(format!("{}/rclone-{}.log", doc_app, name))
-            // .arg("--vfs-cache-max-size")
-            // .arg("100G")
-            // .arg("--drive-chunk-size")
-            // .arg("32M")
-            // .arg("--buffer-size")
-            // .arg("64M")
-            .creation_flags(winbase::CREATE_NO_WINDOW)
-            .spawn();
+            .arg(format!("{}/rclone-{}.log", doc_app, name));
+        // .arg("--vfs-cache-max-size")
+        // .arg("100G")
+        // .arg("--drive-chunk-size")
+        // .arg("32M")
+        // .arg("--buffer-size")
+        // .arg("64M")
+        #[cfg(target_os = "windows")]
+        process.creation_flags(winbase::CREATE_NO_WINDOW);
+        let process = process.spawn();
 
         match process {
             Ok(process) => Some(process.id()),
@@ -172,13 +183,13 @@ impl MountingStorage {
     }
 
     fn unmount_windows(id: u32) -> bool {
-        let mut process = Command::new("taskkill")
-            .arg("/F")
-            .arg("/PID")
-            .arg(&id.to_string())
-            .creation_flags(winbase::CREATE_NO_WINDOW)
-            .spawn()
-            .expect("failed to execute process");
+        let mut cmd = Command::new("taskkill");
+        let process = cmd.arg("/F").arg("/PID").arg(&id.to_string());
+
+        #[cfg(target_os = "windows")]
+        process.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        let mut process = process.spawn().expect("failed to execute process");
 
         let success = process.wait().expect("failed to wait on child");
 

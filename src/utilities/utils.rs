@@ -1,8 +1,10 @@
+use std::{env, path::PathBuf, process::Command};
+
 use auto_launch::AutoLaunchBuilder;
 use directories::{BaseDirs, UserDirs};
-use std::{os::windows::process::CommandExt, path::PathBuf, process::Command, env};
-use winapi::um::winbase;
-use windows::Win32;
+
+#[cfg(target_os = "windows")]
+use {std::os::windows::process::CommandExt, winapi::um::winbase, windows::Win32};
 
 use crate::RcloneApp;
 
@@ -50,6 +52,7 @@ pub fn disable_auto_start_app() {
     }
 }
 
+#[cfg(target_os = "windows")]
 pub fn available_drives() -> Vec<char> {
     let drive_letters = unsafe { Win32::Storage::FileSystem::GetLogicalDrives() };
     let mut available_drives = vec![];
@@ -71,34 +74,38 @@ pub fn app_config_path() -> Option<PathBuf> {
 
 pub fn add_google_drive_storage(name: String) {
     tokio::spawn(async move {
-        Command::new("rclone")
-            .args(&[
-                String::from("config"),
-                String::from("create"),
-                name.trim().to_string(),
-                String::from("drive"),
-                String::from("config_is_local"),
-                String::from("true"),
-            ])
-            .creation_flags(winbase::CREATE_NO_WINDOW)
-            .spawn()
-            .unwrap();
+        let mut cmd = Command::new("rclone");
+        let cmd = cmd.args(&[
+            String::from("config"),
+            String::from("create"),
+            name.trim().to_string(),
+            String::from("drive"),
+            String::from("config_is_local"),
+            String::from("true"),
+        ]);
+
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        cmd.spawn().unwrap();
     });
 }
 
 pub fn add_onedrive_storage(name: String) {
     tokio::spawn(async move {
-        Command::new("rclone")
-            .args(&[
-                String::from("config"),
-                String::from("create"),
-                name.trim().to_string(),
-                String::from("onedrive"),
-                String::from("config_is_local"),
-                String::from("true"),
-            ])
-            .creation_flags(winbase::CREATE_NO_WINDOW)
-            .spawn()
-            .unwrap();
+        let mut cmd = Command::new("rclone");
+        let cmd = cmd.args(&[
+            String::from("config"),
+            String::from("create"),
+            name.trim().to_string(),
+            String::from("onedrive"),
+            String::from("config_is_local"),
+            String::from("true"),
+        ]);
+
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        cmd.spawn().unwrap();
     });
 }

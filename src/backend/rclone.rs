@@ -3,10 +3,11 @@ use serde_json::Value;
 use std::{
     fs::OpenOptions,
     io::{BufRead, BufReader, Write},
-    os::windows::process::CommandExt,
     process::Command,
 };
-use winapi::um::winbase;
+
+#[cfg(target_os = "windows")]
+use {os::windows::process::CommandExt, winapi::um::winbase};
 
 use crate::utilities::{
     enums::StorageType,
@@ -174,13 +175,13 @@ impl Rclone {
     }
 
     pub fn remove_storage(&mut self, name: String) {
-        let output = Command::new("rclone")
-            .arg("config")
-            .arg("delete")
-            .arg(name.clone())
-            .creation_flags(winbase::CREATE_NO_WINDOW)
-            .output()
-            .expect("failed to execute process");
+        let mut cmd = Command::new("rclone");
+        let output = cmd.arg("config").arg("delete").arg(name.clone());
+
+        #[cfg(target_os = "windows")]
+        output.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        let output = output.output().expect("failed to execute process");
         match String::from_utf8(output.stdout) {
             Ok(_) => self.storages.retain(|storage| storage.name != name),
             Err(_) => eprintln!("Error removing storage"),

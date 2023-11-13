@@ -2,14 +2,15 @@
 
 use std::{
     env,
-    os::windows::process::CommandExt,
     path::Path,
     process::{exit, Command},
 };
 
 use rclone_app::RcloneApp;
 use tokio::runtime::Runtime;
-use winapi::um::winbase;
+
+#[cfg(target_os = "windows")]
+use {os::windows::process::CommandExt, winapi::um::winbase};
 
 fn main() {
     let platform = env::consts::OS;
@@ -20,7 +21,7 @@ fn main() {
         exit(1);
     }
 
-    if platform == "windows" {
+    if platform == "windows" || platform == "linux" {
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
 
@@ -54,24 +55,26 @@ fn check_dependencies(platform: &str) -> Vec<String> {
         }
         "linux" => {
             // Check if FUSE is installed
-            let output = Command::new("pkg-config")
-                .arg("--exists")
-                .arg("fuse")
-                .creation_flags(winbase::CREATE_NO_WINDOW)
-                .output()
-                .unwrap();
+            let mut cmd = Command::new("which");
+            let output = cmd.arg("fusermount");
+
+            #[cfg(target_os = "windows")]
+            output.creation_flags(winbase::CREATE_NO_WINDOW);
+
+            let output = output.output().unwrap();
             if !output.status.success() {
                 missing_dependencies.push("FUSE".to_string());
             }
         }
         "macos" => {
             // Check if FUSE is installed
-            let output = Command::new("pkg-config")
-                .arg("--exists")
-                .arg("fuse")
-                .creation_flags(winbase::CREATE_NO_WINDOW)
-                .output()
-                .unwrap();
+            let mut cmd = Command::new("pkg-config");
+            let output = cmd.arg("--exists").arg("fuse");
+
+            #[cfg(target_os = "windows")]
+            output.creation_flags(winbase::CREATE_NO_WINDOW);
+
+            let output = output.output().unwrap();
             if !output.status.success() {
                 missing_dependencies.push("FUSE".to_string());
             }
@@ -80,11 +83,13 @@ fn check_dependencies(platform: &str) -> Vec<String> {
     }
 
     // Check if Rclone is installed
-    let output = Command::new("rclone")
-        .arg("--version")
-        .creation_flags(winbase::CREATE_NO_WINDOW)
-        .output()
-        .unwrap();
+    let mut cmd = Command::new("rclone");
+    let output = cmd.arg("--version");
+
+    #[cfg(target_os = "windows")]
+    output.creation_flags(winbase::CREATE_NO_WINDOW);
+
+    let output = output.output().unwrap();
     if !output.status.success() {
         missing_dependencies.push("Rclone".to_string());
     }
