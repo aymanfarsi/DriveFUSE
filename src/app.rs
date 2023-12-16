@@ -71,23 +71,6 @@ impl RcloneApp {
 }
 
 impl eframe::App for RcloneApp {
-    fn on_close_event(&mut self) -> bool {
-        match self.is_close_requested {
-            true => match self.mounted_storages.unmount_all() {
-                true => true,
-                false => {
-                    eprintln!("Failed to unmount all drives");
-                    false
-                }
-            },
-            false => {
-                self.tx_egui.send(Message::HideApp).unwrap();
-                self.is_close_requested = true;
-                false
-            }
-        }
-    }
-
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         if self.is_first_run {
             self.is_first_run = false;
@@ -148,7 +131,7 @@ impl eframe::App for RcloneApp {
                     },
                     Config::default(),
                 )
-                .unwrap();
+                    .unwrap();
                 watcher
                     .watch(
                         rclone_config_path().unwrap().as_path(),
@@ -219,5 +202,22 @@ impl eframe::App for RcloneApp {
             Tab::Manage => render_manage(ctx, self),
             Tab::Settings => render_settings(ctx, self),
         };
+    }
+
+    fn on_close_event(&mut self) -> bool {
+        match self.is_close_requested {
+            true => match self.mounted_storages.unmount_all() {
+                true => true,
+                false => {
+                    eprintln!("Failed to unmount all drives");
+                    false
+                }
+            },
+            false => {
+                self.tx_egui.send(Message::HideApp).unwrap();
+                self.is_close_requested = true;
+                false
+            }
+        }
     }
 }

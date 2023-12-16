@@ -4,7 +4,7 @@ use directories::UserDirs;
 
 #[cfg(target_os = "windows")]
 use {
-    crate::utilities::utils::available_drives, os::windows::process::CommandExt,
+    crate::utilities::utils::available_drives, std::os::windows::process::CommandExt,
     winapi::um::winbase,
 };
 
@@ -163,12 +163,14 @@ impl MountingStorage {
             .arg("NOTICE")
             .arg("--log-file")
             .arg(format!("{}/rclone-{}.log", doc_app, name));
+        // .arg("--network-mode");
         // .arg("--vfs-cache-max-size")
         // .arg("100G")
         // .arg("--drive-chunk-size")
         // .arg("32M")
         // .arg("--buffer-size")
         // .arg("64M")
+
         #[cfg(target_os = "windows")]
         process.creation_flags(winbase::CREATE_NO_WINDOW);
         let process = process.spawn();

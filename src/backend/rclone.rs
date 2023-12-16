@@ -3,15 +3,16 @@ use serde_json::Value;
 use std::{
     fs::OpenOptions,
     io::{BufRead, BufReader, Write},
+    os::windows::process::CommandExt,
     process::Command,
 };
 
 #[cfg(target_os = "windows")]
-use {os::windows::process::CommandExt, winapi::um::winbase};
+use winapi::um::winbase;
 
 use crate::utilities::{
     enums::StorageType,
-    utils::{add_google_drive_storage, add_onedrive_storage, rclone_config_path},
+    utils::{add_google_drive_storage, add_onedrive_storage, app_config_path, rclone_config_path},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -190,7 +191,18 @@ impl Rclone {
 
     pub fn create_backup(&self) {
         let lines = Self::read_config();
-        let datetime = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S");
-        Self::write_config(lines, Some(format!("rclone_{}.conf", datetime)));
+        // let datetime = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S");
+        // Self::write_config(lines, Some(format!("rclone_{}.conf", datetime)));
+        tokio::spawn(async move {
+            let res = rfd::AsyncFileDialog::new()
+                .add_filter("rclone config", &["conf"])
+                .set_directory(app_config_path().unwrap())
+                .save_file()
+                .await;
+
+            if let Some(path) = res {
+                Self::write_config(lines, Some(path.path().to_str().unwrap().to_owned()));
+            }
+        });
     }
 }

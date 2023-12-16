@@ -1,0 +1,43 @@
+<svg width="3200" height="3200" viewBox="0 0 3200 3200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_206_2)">
+<rect width="3200" height="3200" fill="#F5F5F5"/>
+<path d="M134 1708.5C-258.001 1738 606.761 2172.91 843 2184" stroke="black" stroke-width="14"/>
+<path d="M3068 1676.45C3460 1705.95 2595.24 2140.86 2359 2151.95" stroke="black" stroke-width="14"/>
+<path d="M505 2164.84C967.215 2418.96 1354.5 2212 1904 2239" stroke="black" stroke-width="14"/>
+<path d="M2749.5 2138.84C2287.28 2392.96 2298.5 2296.1 1749 2323.1" stroke="black" stroke-width="14"/>
+<mask id="mask0_206_2" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="-609" y="-968" width="4292" height="3131">
+<ellipse cx="1537" cy="597.5" rx="2146" ry="1565.5" fill="#D9D9D9"/>
+</mask>
+<g mask="url(#mask0_206_2)">
+<mask id="mask1_206_2" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="132" y="932" width="2943" height="1769">
+<circle cx="712.455" cy="2014.59" r="580.455" fill="#D9D9D9"/>
+<circle cx="1610.21" cy="1664.62" r="732.617" fill="#D9D9D9"/>
+<circle cx="2342.38" cy="1968.05" r="732.617" fill="url(#paint0_linear_206_2)"/>
+</mask>
+<g mask="url(#mask1_206_2)">
+<rect x="-205" y="808" width="3564" height="1432" fill="#3285A8"/>
+</g>
+<ellipse cx="1940" cy="1141.62" rx="63" ry="47.3763" fill="#F5F5F5"/>
+<rect x="1877" y="932" width="126" height="209.84" fill="#F5F5F5"/>
+<ellipse cx="1720" cy="1255.82" rx="69" ry="73.1843" fill="#F5F5F5"/>
+<rect x="1651" y="932" width="138" height="324.15" fill="#F5F5F5"/>
+<ellipse cx="1494" cy="1328.41" rx="69" ry="89.5909" fill="#F5F5F5"/>
+<rect x="1425" y="932" width="138" height="396.818" fill="#F5F5F5"/>
+<circle cx="617" cy="1939" r="213" fill="#D9D9D9"/>
+<circle cx="617" cy="1939" r="110" fill="black"/>
+<circle cx="2556" cy="1911" r="213" fill="#D9D9D9"/>
+<circle cx="2556" cy="1911" r="110" fill="black"/>
+<rect x="1338" y="1863.93" width="48" height="173" rx="24" transform="rotate(-46.6901 1338 1863.93)" fill="#0E2A36"/>
+<rect x="1902.68" y="1829" width="48" height="173" rx="24" transform="rotate(43.3164 1902.68 1829)" fill="#0E2A36"/>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_206_2" x1="2430.55" y1="1846.76" x2="2905.38" y2="1322.25" gradientUnits="userSpaceOnUse">
+<stop offset="0.58969" stop-color="#D9D9D9"/>
+<stop offset="0.973958" stop-color="white" stop-opacity="0.05"/>
+</linearGradient>
+<clipPath id="clip0_206_2">
+<rect width="3200" height="3200" fill="white"/>
+</clipPath>
+</defs>
+</svg>

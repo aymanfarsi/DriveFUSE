@@ -6,11 +6,11 @@ use std::{
     process::{exit, Command},
 };
 
-use rclone_app::RcloneApp;
+use drive_af::RcloneApp;
 use tokio::runtime::Runtime;
 
 #[cfg(target_os = "windows")]
-use {os::windows::process::CommandExt, winapi::um::winbase};
+use {std::os::windows::process::CommandExt, winapi::um::winbase};
 
 fn main() {
     let platform = env::consts::OS;
@@ -21,7 +21,7 @@ fn main() {
         exit(1);
     }
 
-    if platform == "windows" || platform == "linux" {
+    if platform == "windows" {
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
 
@@ -36,7 +36,7 @@ fn main() {
             initial_window_size: Some(egui::Vec2::new(430.0, 250.0)),
             ..Default::default()
         };
-        let _ = eframe::run_native("Rclone App", native_options, Box::new(|_cc| Box::new(app)));
+        let _ = eframe::run_native("DriveAF", native_options, Box::new(|_cc| Box::new(app)));
     } else {
         println!("This app only supports Windows FOR NOW!");
         println!("Your platform is: {}", platform);
@@ -58,9 +58,6 @@ fn check_dependencies(platform: &str) -> Vec<String> {
             let mut cmd = Command::new("which");
             let output = cmd.arg("fusermount");
 
-            #[cfg(target_os = "windows")]
-            output.creation_flags(winbase::CREATE_NO_WINDOW);
-
             let output = output.output().unwrap();
             if !output.status.success() {
                 missing_dependencies.push("FUSE".to_string());
@@ -70,9 +67,6 @@ fn check_dependencies(platform: &str) -> Vec<String> {
             // Check if FUSE is installed
             let mut cmd = Command::new("pkg-config");
             let output = cmd.arg("--exists").arg("fuse");
-
-            #[cfg(target_os = "windows")]
-            output.creation_flags(winbase::CREATE_NO_WINDOW);
 
             let output = output.output().unwrap();
             if !output.status.success() {
