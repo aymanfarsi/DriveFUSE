@@ -7,6 +7,7 @@ use std::{
 };
 
 use drive_af::RcloneApp;
+use eframe::IconData;
 use tokio::runtime::Runtime;
 
 #[cfg(target_os = "windows")]
@@ -34,6 +35,9 @@ fn main() {
             resizable: false,
             min_window_size: Some(egui::Vec2::new(430.0, 250.0)),
             initial_window_size: Some(egui::Vec2::new(430.0, 250.0)),
+            icon_data: Some(
+                IconData::try_from_png_bytes(include_bytes!("../assets/DriveAF-nobg.png")).unwrap(),
+            ),
             ..Default::default()
         };
         let _ = eframe::run_native("DriveAF", native_options, Box::new(|_cc| Box::new(app)));

@@ -1,6 +1,6 @@
 [package]
 name = "drive_af"
-version = "0.1.10"
+version = "0.2.5"
 authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
 rust-version = "1.70"
@@ -37,12 +37,12 @@ auto-launch = "0.5.0"
 
 # windows dependencies
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.51.1", features = ["Win32_Storage_FileSystem"] }
+windows = { version = "0.52.0", features = ["Win32_Storage_FileSystem"] }
 winapi = "0.3.9"
 tray-item = "0.9.0"
 
 [target.'cfg(windows)'.build-dependencies]
-windres = "0.2.2"
+winres = "0.1.12"
 
 # linux dependencies
 [target.'cfg(target_os = "linux")'.dependencies]
@@ -52,22 +52,23 @@ tray-item = { version = "0.9.0", features = ["libappindicator"] }
 [target.'cfg(target_os = "macos")'.dependencies]
 
 [profile.release]
-opt-level = 3
-debug = false
-debug-assertions = false
-overflow-checks = false
-panic = "unwind"
-codegen-units = 16
-lto = true
-incremental = false
-strip = "debuginfo"
+# opt-level = 3
+# debug = false
+# debug-assertions = false
+# overflow-checks = false
+# panic = "unwind"
+# codegen-units = 16
+# lto = true
+# incremental = false
+# strip = "debuginfo"
 
 [profile.dev]
-opt-level = 0
-debug = true
-debug-assertions = true
-overflow-checks = true
-lto = false
-panic = 'unwind'
-incremental = true
-codegen-units = 256
+# opt-level = 0
+# debug = true
+# debug-assertions = true
+# overflow-checks = true
+# lto = false
+# panic = 'unwind'
+# incremental = true
+# codegen-units = 256
+

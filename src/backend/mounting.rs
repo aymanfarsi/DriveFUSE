@@ -31,7 +31,7 @@ impl MountingStorage {
     }
 
     pub fn is_mounted(&self, name: String) -> bool {
-        self.drives.contains_key(&name)
+        self.mounted.contains_key(&name)
     }
 
     pub fn get_mounted(&self, name: String) -> Option<String> {

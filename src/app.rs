@@ -79,9 +79,8 @@ impl eframe::App for RcloneApp {
             let tx_egui_clone_tray = self.tx_egui.clone();
             let ctx_clone_tray = ctx.clone();
             tokio::spawn(async move {
-                let mut tray =
-                    TrayItem::new("RcloneApp Tray", IconSource::Resource("green-icon-file"))
-                        .unwrap();
+                let icon = IconSource::Resource("app-icon");
+                let mut tray = TrayItem::new("DriveAF Tray", icon).unwrap();
                 let rx_tray = init_tray_menu(&mut tray);
                 loop {
                     match rx_tray.recv() {
@@ -93,15 +92,13 @@ impl eframe::App for RcloneApp {
                             break;
                         }
                         Ok(Message::Red) => {
-                            tray.set_icon(IconSource::Resource("red-icon-file"))
-                                .unwrap();
+                            tray.set_icon(IconSource::Resource("red-icon")).unwrap();
                             tx_egui_clone_tray.send(Message::Red).unwrap();
                             ctx_clone_tray.request_repaint();
                         }
                         Ok(Message::Green) => {
                             tx_egui_clone_tray.send(Message::Green).unwrap();
-                            tray.set_icon(IconSource::Resource("green-icon-file"))
-                                .unwrap();
+                            tray.set_icon(IconSource::Resource("green-icon")).unwrap();
                             ctx_clone_tray.request_repaint();
                         }
                         Ok(Message::ShowApp) => {
@@ -131,7 +128,7 @@ impl eframe::App for RcloneApp {
                     },
                     Config::default(),
                 )
-                    .unwrap();
+                .unwrap();
                 watcher
                     .watch(
                         rclone_config_path().unwrap().as_path(),

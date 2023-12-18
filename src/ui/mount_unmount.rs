@@ -34,7 +34,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                         for storage in &app.rclone.storages {
                             let is_mounted = app.mounted_storages.is_mounted(storage.name.clone());
                             #[cfg(target_os = "windows")]
-                            let available_drives = available_drives();
+                            let possible_drives = available_drives();
 
                             let status_text = if is_mounted {
                                 RichText::new("Mounted").color(Color32::GREEN)
@@ -60,12 +60,12 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                         .unwrap_or("N/A".to_owned()),
                                 );
                             } else {
-                                ComboBox::from_id_source("drive_letter")
+                                ComboBox::from_id_source(format!("drive_letter_{}", storage.name))
                                     .selected_text(app.new_storage_drive_letter.clone())
                                     .width(70.)
                                     .show_ui(ui, |ui| {
                                         #[cfg(target_os = "windows")]
-                                        for drive in &available_drives {
+                                        for drive in &possible_drives {
                                             ui.selectable_value(
                                                 &mut app.new_storage_drive_letter,
                                                 drive.to_string(),
@@ -79,9 +79,14 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                 if is_mounted {
                                     app.mounted_storages.unmount(storage.name.clone());
                                 } else {
-                                    if app.new_storage_drive_letter == *"N/A" {
+                                    let drive_letter = app.new_storage_drive_letter.clone();
+                                    let is_mounted = app.mounted_storages.is_mounted(drive_letter);
+                                    if is_mounted {
+                                        let possible_drives = available_drives();
+                                        let first_available_drive =
+                                            possible_drives.first().unwrap();
                                         app.new_storage_drive_letter =
-                                            available_drives[0].to_string();
+                                            first_available_drive.to_string();
                                     }
                                     app.mounted_storages.mount(
                                         app.new_storage_drive_letter.clone(),
