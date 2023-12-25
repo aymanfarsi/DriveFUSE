@@ -2,6 +2,7 @@
 
 use std::{
     env,
+    fs::create_dir_all,
     path::Path,
     process::{exit, Command},
 };
@@ -22,7 +23,9 @@ fn main() {
         exit(1);
     }
 
-    if platform == "windows" {
+    if platform == "windows" || platform == "linux" {
+        create_dir_all("~/driveaf").unwrap();
+
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, process::Command};
+use std::{collections::HashMap, path::Path, process::Command};
 
 use directories::UserDirs;
 
@@ -28,6 +28,10 @@ impl Default for MountingStorage {
 impl MountingStorage {
     pub fn total_mounted(&self) -> u32 {
         self.drives.len().try_into().unwrap()
+    }
+
+    pub fn is_drive_letter_mounted(&self, drive: char) -> bool {
+        self.mounted.values().any(|&v| v == drive)
     }
 
     pub fn is_mounted(&self, name: String) -> bool {
@@ -63,16 +67,54 @@ impl MountingStorage {
             success
         }
 
-        #[cfg(target_os = "linux")]
+        #[cfg(not(target_os = "windows"))]
         {
-            eprintln!("Linux is not supported yet!");
-            false
-        }
+            let mut success = true;
 
-        #[cfg(target_os = "macos")]
-        {
-            eprintln!("MacOS is not supported yet!");
-            false
+            for drive in drives {
+                if !Path::new(&format!("~/drive_af/{}", drive.name)).exists() {
+                    let mut cmd = Command::new("mkdir");
+                    let process = cmd.arg(format!("~/drive_af/{}", drive.name));
+
+                    let process = process.spawn();
+
+                    match process {
+                        Ok(_) => {}
+                        Err(e) => {
+                            eprintln!("Error creating ~/drive_af/{}: due to {}", drive.name, e);
+                            success = false;
+                        }
+                    }
+                }
+                let mut cmd = Command::new("rclone");
+                let process = cmd
+                    .arg("mount")
+                    .arg(format!("{}:", drive.name))
+                    .arg(format!("/drive_af/{}", drive.name))
+                    .arg("--vfs-cache-mode")
+                    .arg("full")
+                    .arg("--dir-cache-time")
+                    .arg("1000h")
+                    .arg("--allow-other");
+
+                let process = process.spawn();
+
+                match process {
+                    Ok(process) => {
+                        println!("Mounted {} to ~/drive_af/{}", drive.name, drive.name);
+                        self.drives.insert(drive.name.clone(), process.id());
+                    }
+                    Err(e) => {
+                        eprintln!(
+                            "Error mounting {} at ~/drive_af/{}: due to {}",
+                            drive.name, drive.name, e
+                        );
+                        success = false;
+                    }
+                }
+            }
+
+            success
         }
     }
 
@@ -91,8 +133,22 @@ impl MountingStorage {
                 success
             }
             _ => {
-                eprintln!("This platform {} is not supported yet!", platform);
-                false
+                let mut success = true;
+                for (name, process_id) in self.drives.iter() {
+                    let mut cmd = Command::new("kill");
+                    let process = cmd.arg("-9").arg(&process_id.to_string());
+
+                    let process = process.spawn();
+
+                    match process {
+                        Ok(_) => {}
+                        Err(e) => {
+                            eprintln!("Error unmounting {} due to {}", name, e);
+                            success = false;
+                        }
+                    }
+                }
+                success
             }
         }
     }
@@ -115,7 +171,16 @@ impl MountingStorage {
                 }
             }
             _ => {
-                eprintln!("This platform {} is not supported yet!", platform);
+                let id = Self::mount_unix(name.clone());
+                match id {
+                    Some(id) => {
+                        println!("Mounted {} to ~/drive_af/{}", name, name);
+                        self.drives.insert(name.clone(), id);
+                    }
+                    None => {
+                        eprintln!("Failed to mount {} to ~/drive_af/{}", name, name);
+                    }
+                }
             }
         }
     }
@@ -134,7 +199,13 @@ impl MountingStorage {
                 }
             }
             _ => {
-                eprintln!("This platform {} is not supported yet!", platform);
+                let process_id = *self.drives.get(&driver_letter).unwrap();
+                let success = Self::unmount_unix(process_id);
+                if success {
+                    self.drives.remove(&driver_letter);
+                } else {
+                    eprintln!("Failed to unmount {}", driver_letter);
+                }
             }
         }
     }
@@ -198,8 +269,43 @@ impl MountingStorage {
         success.success()
     }
 
-    // MOUNTING
-    // .arg("--allow-other")
+    fn mount_unix(name: String) -> Option<u32> {
+        let mut cmd = Command::new("rclone");
+        let process = cmd
+            .arg("mount")
+            .arg(format!("{}:", name))
+            .arg(format!("~/drive_af/{}", name))
+            .arg("--vfs-cache-mode")
+            .arg("full")
+            .arg("--dir-cache-time")
+            .arg("1000h")
+            .arg("--allow-other");
+
+        let process = process.spawn();
+
+        match process {
+            Ok(process) => Some(process.id()),
+            Err(e) => {
+                eprintln!("Error mounting {} at ~/drive_af/{}: due to {}", name, name, e);
+                None
+            }
+        }
+    }
+
+    fn unmount_unix(id: u32) -> bool {
+        let mut cmd = Command::new("kill");
+        let process = cmd.arg("-9").arg(&id.to_string());
+
+        let process = process.spawn();
+
+        match process {
+            Ok(_) => true,
+            Err(e) => {
+                eprintln!("Error unmounting {} due to {}", id, e);
+                false
+            }
+        }
+    }
 
     // UNMOUNTING
     // # Linux
