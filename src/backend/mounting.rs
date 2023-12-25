@@ -8,6 +8,11 @@ use {
     winapi::um::winbase,
 };
 
+#[cfg(not(target_os = "windows"))]
+use {std::fs, std::fs::DirBuilder};
+
+use crate::utilities::utils::unmount_delete_directory;
+
 use super::rclone::Storage;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -35,7 +40,22 @@ impl MountingStorage {
     }
 
     pub fn is_mounted(&self, name: String) -> bool {
-        self.mounted.contains_key(&name)
+        #[cfg(target_os = "windows")]
+        return self.mounted.contains_key(&name);
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            let path = format!("/home/{}/drive_af/{}", whoami::username(), name.clone());
+            let path = Path::new(&path);
+            if let Ok(entries) = fs::read_dir(path) {
+                for entry in entries.flatten() {
+                    if entry.file_type().map(|ft| ft.is_file()).unwrap_or(false) {
+                        return true;
+                    }
+                }
+            }
+            false
+        }
     }
 
     pub fn get_mounted(&self, name: String) -> Option<String> {
@@ -70,27 +90,30 @@ impl MountingStorage {
         #[cfg(not(target_os = "windows"))]
         {
             let mut success = true;
+            let username = whoami::username();
 
             for drive in drives {
-                if !Path::new(&format!("~/drive_af/{}", drive.name)).exists() {
-                    let mut cmd = Command::new("mkdir");
-                    let process = cmd.arg(format!("~/drive_af/{}", drive.name));
-
-                    let process = process.spawn();
-
-                    match process {
-                        Ok(_) => {}
-                        Err(e) => {
-                            eprintln!("Error creating ~/drive_af/{}: due to {}", drive.name, e);
-                            success = false;
-                        }
-                    }
+                if !Path::new(&format!(
+                    "/home/{}/drive_af/{}",
+                    username.clone(),
+                    drive.name
+                ))
+                .exists()
+                {
+                    DirBuilder::new()
+                        .recursive(true)
+                        .create(format!("/home/{}/drive_af/{}", username, drive.name))
+                        .unwrap();
                 }
                 let mut cmd = Command::new("rclone");
                 let process = cmd
                     .arg("mount")
                     .arg(format!("{}:", drive.name))
-                    .arg(format!("/drive_af/{}", drive.name))
+                    .arg(format!(
+                        "/home/{}/drive_af/{}",
+                        username.clone(),
+                        drive.name
+                    ))
                     .arg("--vfs-cache-mode")
                     .arg("full")
                     .arg("--dir-cache-time")
@@ -101,13 +124,21 @@ impl MountingStorage {
 
                 match process {
                     Ok(process) => {
-                        println!("Mounted {} to ~/drive_af/{}", drive.name, drive.name);
+                        println!(
+                            "Mounted {} to /home/{}/drive_af/{}",
+                            username.clone(),
+                            drive.name,
+                            drive.name
+                        );
                         self.drives.insert(drive.name.clone(), process.id());
                     }
                     Err(e) => {
                         eprintln!(
-                            "Error mounting {} at ~/drive_af/{}: due to {}",
-                            drive.name, drive.name, e
+                            "Error mounting {} at /home/{}/drive_af/{}: due to {}",
+                            username.clone(),
+                            drive.name,
+                            drive.name,
+                            e
                         );
                         success = false;
                     }
@@ -141,7 +172,9 @@ impl MountingStorage {
                     let process = process.spawn();
 
                     match process {
-                        Ok(_) => {}
+                        Ok(_) => {
+                            unmount_delete_directory(name.clone());
+                        }
                         Err(e) => {
                             eprintln!("Error unmounting {} due to {}", name, e);
                             success = false;
@@ -171,14 +204,18 @@ impl MountingStorage {
                 }
             }
             _ => {
+                let username = whoami::username();
                 let id = Self::mount_unix(name.clone());
                 match id {
                     Some(id) => {
-                        println!("Mounted {} to ~/drive_af/{}", name, name);
+                        println!("Mounted {} to /home/{}/drive_af/{}", username, name, name);
                         self.drives.insert(name.clone(), id);
                     }
                     None => {
-                        eprintln!("Failed to mount {} to ~/drive_af/{}", name, name);
+                        eprintln!(
+                            "Failed to mount {} to /home/{}/drive_af/{}",
+                            username, name, name
+                        );
                     }
                 }
             }
@@ -202,7 +239,15 @@ impl MountingStorage {
                 let process_id = *self.drives.get(&driver_letter).unwrap();
                 let success = Self::unmount_unix(process_id);
                 if success {
+                    let name = self
+                        .drives
+                        .iter()
+                        .find(|(_, &v)| v == process_id)
+                        .unwrap()
+                        .0
+                        .clone();
                     self.drives.remove(&driver_letter);
+                    unmount_delete_directory(name);
                 } else {
                     eprintln!("Failed to unmount {}", driver_letter);
                 }
@@ -270,11 +315,18 @@ impl MountingStorage {
     }
 
     fn mount_unix(name: String) -> Option<u32> {
+        let username = whoami::username();
+        if !Path::new(&format!("/home/{}/drive_af/{}", username.clone(), name)).exists() {
+            DirBuilder::new()
+                .recursive(true)
+                .create(format!("/home/{}/drive_af/{}", username, name))
+                .unwrap();
+        }
         let mut cmd = Command::new("rclone");
         let process = cmd
             .arg("mount")
             .arg(format!("{}:", name))
-            .arg(format!("~/drive_af/{}", name))
+            .arg(format!("/home/{}/drive_af/{}", username, name))
             .arg("--vfs-cache-mode")
             .arg("full")
             .arg("--dir-cache-time")
@@ -286,7 +338,10 @@ impl MountingStorage {
         match process {
             Ok(process) => Some(process.id()),
             Err(e) => {
-                eprintln!("Error mounting {} at ~/drive_af/{}: due to {}", name, name, e);
+                eprintln!(
+                    "Error mounting {} at /home/{}/drive_af/{}: due to {}",
+                    username, name, name, e
+                );
                 None
             }
         }

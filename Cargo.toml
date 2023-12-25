@@ -9,11 +9,6 @@ build = "build.rs"
 [dependencies]
 # gui
 egui = "0.23.0"
-eframe = { version = "0.23.0", default-features = false, features = [
-    "default_fonts",
-    "wgpu",
-    "x11",
-] }
 
 # filesystem
 directories = "5.0"
@@ -34,9 +29,14 @@ tokio = { version = "1.33.0", features = [
 ] }
 rand = "0.8.5"
 auto-launch = "0.5.0"
+whoami = "1.4.1"
 
 # windows dependencies
 [target.'cfg(windows)'.dependencies]
+eframe = { version = "0.23.0", default-features = false, features = [
+    "default_fonts",
+    "wgpu",
+] }
 windows = { version = "0.52.0", features = ["Win32_Storage_FileSystem"] }
 winapi = "0.3.9"
 tray-item = "0.9.0"
@@ -46,23 +46,15 @@ winres = "0.1.12"
 
 # linux dependencies
 [target.'cfg(target_os = "linux")'.dependencies]
+eframe = { version = "0.23.0", default-features = false, features = [
+    "default_fonts",
+    "wayland",
+    "glow",
+] }
 tray-item = { version = "0.9.0", features = ["libappindicator"] }
 
 # macos dependencies
 [target.'cfg(target_os = "macos")'.dependencies]
-
-[profile.release]
-# opt-level = 3
-# debug = false
-# debug-assertions = false
-# overflow-checks = false
-# panic = "unwind"
-# codegen-units = 16
-# lto = true
-# incremental = false
-# strip = "debuginfo"
-
-[profile.dev]
 # opt-level = 0
 # debug = true
 # debug-assertions = true

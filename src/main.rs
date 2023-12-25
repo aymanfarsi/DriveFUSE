@@ -24,7 +24,8 @@ fn main() {
     }
 
     if platform == "windows" || platform == "linux" {
-        create_dir_all("~/driveaf").unwrap();
+        #[cfg(target_os = "linux")]
+        create_dir_all(format!("/home/{}/drive_af", whoami::username())).unwrap();
 
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
@@ -45,7 +46,7 @@ fn main() {
         };
         let _ = eframe::run_native("DriveAF", native_options, Box::new(|_cc| Box::new(app)));
     } else {
-        println!("This app only supports Windows FOR NOW!");
+        println!("This app only supports Windows and Linux FOR NOW!");
         println!("Your platform is: {}", platform);
     }
 }
