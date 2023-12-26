@@ -2,7 +2,6 @@
 
 use std::{
     env,
-    fs::create_dir_all,
     path::Path,
     process::{exit, Command},
 };
@@ -13,6 +12,9 @@ use tokio::runtime::Runtime;
 
 #[cfg(target_os = "windows")]
 use {std::os::windows::process::CommandExt, winapi::um::winbase};
+
+#[cfg(target_os = "linux")]
+use std::fs::create_dir_all;
 
 fn main() {
     let platform = env::consts::OS;

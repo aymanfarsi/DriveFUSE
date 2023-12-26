@@ -85,27 +85,6 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                     });
                             }
 
-<<<<<<< HEAD
-                            if ui.button(action_text).clicked() && cfg!(windows) {
-                                if is_mounted {
-                                    app.mounted_storages.unmount(storage.name.clone());
-                                } else {
-                                    // let drive_letter = app.new_storage_drive_letter.clone();
-                                    // let is_mounted = app.mounted_storages.is_drive_letter_mounted(
-                                    //     drive_letter.chars().next().unwrap(),
-                                    // );
-                                    // if is_mounted {
-                                    //     let possible_drives = available_drives();
-                                    //     app.new_storage_drive_letter =
-                                    //         possible_drives.first().unwrap().to_string();
-                                    // }
-                                    let is_already_mounted =
-                                        app.mounted_storages.is_drive_letter_mounted(
-                                            app.new_storage_drive_letter.chars().next().unwrap(),
-                                        );
-                                    if app.new_storage_drive_letter != "N/A" && !is_already_mounted
-                                    {
-=======
                             if ui.button(action_text).clicked() {
                                 #[cfg(target_os = "windows")]
                                 {
@@ -143,7 +122,6 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                     if is_mounted {
                                         app.mounted_storages.unmount(storage.name.clone());
                                     } else {
->>>>>>> 468624aaa7bb7e82313c5bfa51adf8d7c1883fcd
                                         app.mounted_storages.mount(
                                             app.new_storage_drive_letter.clone(),
                                             storage.name.clone(),

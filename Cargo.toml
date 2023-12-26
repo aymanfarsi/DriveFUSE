@@ -1,6 +1,6 @@
 [package]
 name = "drive_af"
-version = "0.2.5"
+version = "0.3.1"
 authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
 rust-version = "1.70"
@@ -29,7 +29,7 @@ tokio = { version = "1.33.0", features = [
 ] }
 rand = "0.8.5"
 auto-launch = "0.5.0"
-whoami = "1.4.1"
+
 
 # windows dependencies
 [target.'cfg(windows)'.dependencies]
@@ -52,15 +52,7 @@ eframe = { version = "0.23.0", default-features = false, features = [
     "glow",
 ] }
 tray-item = { version = "0.9.0", features = ["libappindicator"] }
+whoami = "1.4.1"
 
 # macos dependencies
 [target.'cfg(target_os = "macos")'.dependencies]
-# opt-level = 0
-# debug = true
-# debug-assertions = true
-# overflow-checks = true
-# lto = false
-# panic = 'unwind'
-# incremental = true
-# codegen-units = 256
-
