@@ -33,6 +33,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
 
                         for storage in &app.rclone.storages {
                             let is_mounted = app.mounted_storages.is_mounted(storage.name.clone());
+
                             #[cfg(target_os = "windows")]
                             let possible_drives = available_drives();
 
@@ -66,32 +67,47 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                     .show_ui(ui, |ui| {
                                         #[cfg(target_os = "windows")]
                                         for drive in &possible_drives {
-                                            ui.selectable_value(
-                                                &mut app.new_storage_drive_letter,
-                                                drive.to_string(),
-                                                drive.to_string(),
+                                            let current_value = &mut app.new_storage_drive_letter;
+                                            let selected_value = drive.to_string();
+                                            let text = drive.to_string();
+
+                                            let response = ui.selectable_label(
+                                                *current_value == selected_value,
+                                                text,
                                             );
+
+                                            if response.clicked() {
+                                                *current_value = selected_value;
+                                                ui.close_menu();
+                                            }
                                         }
                                     });
                             }
-                            #[cfg(target_os = "windows")]
-                            if ui.button(action_text).clicked() {
+
+                            if ui.button(action_text).clicked() && cfg!(windows) {
                                 if is_mounted {
                                     app.mounted_storages.unmount(storage.name.clone());
                                 } else {
-                                    let drive_letter = app.new_storage_drive_letter.clone();
-                                    let is_mounted = app.mounted_storages.is_mounted(drive_letter);
-                                    if is_mounted {
-                                        let possible_drives = available_drives();
-                                        let first_available_drive =
-                                            possible_drives.first().unwrap();
-                                        app.new_storage_drive_letter =
-                                            first_available_drive.to_string();
+                                    // let drive_letter = app.new_storage_drive_letter.clone();
+                                    // let is_mounted = app.mounted_storages.is_drive_letter_mounted(
+                                    //     drive_letter.chars().next().unwrap(),
+                                    // );
+                                    // if is_mounted {
+                                    //     let possible_drives = available_drives();
+                                    //     app.new_storage_drive_letter =
+                                    //         possible_drives.first().unwrap().to_string();
+                                    // }
+                                    let is_already_mounted =
+                                        app.mounted_storages.is_drive_letter_mounted(
+                                            app.new_storage_drive_letter.chars().next().unwrap(),
+                                        );
+                                    if app.new_storage_drive_letter != "N/A" && !is_already_mounted
+                                    {
+                                        app.mounted_storages.mount(
+                                            app.new_storage_drive_letter.clone(),
+                                            storage.name.clone(),
+                                        );
                                     }
-                                    app.mounted_storages.mount(
-                                        app.new_storage_drive_letter.clone(),
-                                        storage.name.clone(),
-                                    );
                                 }
                             }
                             ui.end_row();

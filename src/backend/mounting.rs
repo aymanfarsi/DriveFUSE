@@ -30,6 +30,10 @@ impl MountingStorage {
         self.drives.len().try_into().unwrap()
     }
 
+    pub fn is_drive_letter_mounted(&self, drive: char) -> bool {
+        self.mounted.values().any(|&v| v == drive)
+    }
+
     pub fn is_mounted(&self, name: String) -> bool {
         self.mounted.contains_key(&name)
     }
