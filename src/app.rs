@@ -2,8 +2,11 @@ use std::sync::mpsc::{Receiver, SyncSender};
 
 use eframe::egui;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
+#[cfg(target_os = "windows")]
 use tray_item::{IconSource, TrayItem};
 
+#[cfg(target_os = "windows")]
+use crate::utilities::tray_menu::init_tray_menu;
 use crate::{
     backend::{app_config::AppConfig, mounting::MountingStorage, rclone::Rclone},
     ui::{
@@ -12,7 +15,6 @@ use crate::{
     },
     utilities::{
         enums::{Message, Tab},
-        tray_menu::init_tray_menu,
         utils::rclone_config_path,
     },
 };
@@ -76,46 +78,49 @@ impl eframe::App for RcloneApp {
             self.is_first_run = false;
 
             // * Spawn tray menu thread on first run
-            let tx_egui_clone_tray = self.tx_egui.clone();
-            let ctx_clone_tray = ctx.clone();
-            tokio::spawn(async move {
-                let icon = IconSource::Resource("app-icon");
-                let mut tray = TrayItem::new("DriveAF Tray", icon).unwrap();
-                let rx_tray = init_tray_menu(&mut tray);
-                loop {
-                    match rx_tray.recv() {
-                        Ok(Message::Quit) => {
-                            tx_egui_clone_tray.send(Message::ShowApp).unwrap();
-                            ctx_clone_tray.request_repaint();
-                            tx_egui_clone_tray.send(Message::Quit).unwrap();
-                            ctx_clone_tray.request_repaint();
-                            break;
+            #[cfg(target_os = "windows")]
+            {
+                let tx_egui_clone_tray = self.tx_egui.clone();
+                let ctx_clone_tray = ctx.clone();
+                tokio::spawn(async move {
+                    let icon = IconSource::Resource("app-icon");
+                    let mut tray = TrayItem::new("DriveAF Tray", icon).unwrap();
+                    let rx_tray = init_tray_menu(&mut tray);
+                    loop {
+                        match rx_tray.recv() {
+                            Ok(Message::Quit) => {
+                                tx_egui_clone_tray.send(Message::ShowApp).unwrap();
+                                ctx_clone_tray.request_repaint();
+                                tx_egui_clone_tray.send(Message::Quit).unwrap();
+                                ctx_clone_tray.request_repaint();
+                                break;
+                            }
+                            Ok(Message::Red) => {
+                                tray.set_icon(IconSource::Resource("red-icon")).unwrap();
+                                tx_egui_clone_tray.send(Message::Red).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::Green) => {
+                                tx_egui_clone_tray.send(Message::Green).unwrap();
+                                tray.set_icon(IconSource::Resource("green-icon")).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::ShowApp) => {
+                                tx_egui_clone_tray.send(Message::ShowApp).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::HideApp) => {
+                                tx_egui_clone_tray.send(Message::HideApp).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Err(_) => {
+                                eprintln!("Error receiving message from tray menu");
+                            }
+                            Ok(Message::RcloneConfigUpdated) => {}
                         }
-                        Ok(Message::Red) => {
-                            tray.set_icon(IconSource::Resource("red-icon")).unwrap();
-                            tx_egui_clone_tray.send(Message::Red).unwrap();
-                            ctx_clone_tray.request_repaint();
-                        }
-                        Ok(Message::Green) => {
-                            tx_egui_clone_tray.send(Message::Green).unwrap();
-                            tray.set_icon(IconSource::Resource("green-icon")).unwrap();
-                            ctx_clone_tray.request_repaint();
-                        }
-                        Ok(Message::ShowApp) => {
-                            tx_egui_clone_tray.send(Message::ShowApp).unwrap();
-                            ctx_clone_tray.request_repaint();
-                        }
-                        Ok(Message::HideApp) => {
-                            tx_egui_clone_tray.send(Message::HideApp).unwrap();
-                            ctx_clone_tray.request_repaint();
-                        }
-                        Err(_) => {
-                            eprintln!("Error receiving message from tray menu");
-                        }
-                        Ok(Message::RcloneConfigUpdated) => {}
                     }
-                }
-            });
+                });
+            }
 
             // * Spawn rclone config watcher thread
             let tx_egui_clone_config = self.tx_egui.clone();

@@ -1,9 +1,10 @@
 use chrono::{DateTime, FixedOffset};
 use serde_json::Value;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
 use std::{
     fs::OpenOptions,
     io::{BufRead, BufReader, Write},
-    os::windows::process::CommandExt,
     process::Command,
 };
 
@@ -51,7 +52,7 @@ impl Rclone {
             .write(true)
             .create(true)
             .read(true)
-            .open(&rclone_config_path)
+            .open(rclone_config_path)
             .unwrap();
         let buffered = BufReader::new(file);
 
@@ -75,7 +76,7 @@ impl Rclone {
             .write(true)
             .create(file_name.is_some())
             .truncate(true)
-            .open(&rclone_config_path)
+            .open(rclone_config_path)
             .unwrap();
         let mut buffered = BufReader::new(file);
 

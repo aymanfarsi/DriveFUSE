@@ -1,12 +1,30 @@
 use std::{env, path::PathBuf, process::Command};
 
 use auto_launch::AutoLaunchBuilder;
-use directories::{BaseDirs, UserDirs};
+use directories::BaseDirs;
+#[cfg(target_os = "windows")]
+use directories::UserDirs;
 
 #[cfg(target_os = "windows")]
 use {std::os::windows::process::CommandExt, winapi::um::winbase, windows::Win32};
 
 use crate::RcloneApp;
+
+#[cfg(target_os = "linux")]
+pub fn unmount_delete_directory(name: String) {
+    use std::{fs, path::Path};
+
+    let username = whoami::username();
+    let path = format!("/home/{}/drive_af/{}", username, name);
+    let path = Path::new(&path);
+
+    let _ = Command::new("fusermount")
+        .args(["-u", path.to_str().unwrap()])
+        .spawn()
+        .unwrap();
+
+    fs::remove_dir(path).unwrap();
+}
 
 pub fn enable_auto_mount(app: &mut RcloneApp) {
     app.app_config.is_auto_mount = true;
@@ -69,7 +87,10 @@ pub fn rclone_config_path() -> Option<PathBuf> {
 }
 
 pub fn app_config_path() -> Option<PathBuf> {
-    UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("rclone_app"))
+    #[cfg(target_os = "windows")]
+    return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("rclone_app"));
+    #[cfg(not(target_os = "windows"))]
+    Some(PathBuf::from("~/.config/rclone_app"))
 }
 
 pub fn add_google_drive_storage(name: String) {

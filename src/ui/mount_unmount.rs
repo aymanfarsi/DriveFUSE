@@ -1,7 +1,7 @@
-use egui::{CentralPanel, Color32, ComboBox, Context, Grid, RichText, ScrollArea};
+use egui::{CentralPanel, Color32, Context, Grid, RichText, ScrollArea};
 
 #[cfg(target_os = "windows")]
-use crate::utilities::utils::available_drives;
+use {crate::utilities::utils::available_drives, egui::ComboBox};
 
 use crate::RcloneApp;
 
@@ -27,6 +27,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                         ui.label("Name");
                         ui.label("Type");
                         ui.label("Status");
+                        #[cfg(target_os = "windows")]
                         ui.label("Drive Letter");
                         ui.label("Action");
                         ui.end_row();
@@ -54,6 +55,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                             ui.label(storage.name.to_string());
                             ui.label(drive_type);
                             ui.label(status_text);
+                            #[cfg(target_os = "windows")]
                             if is_mounted {
                                 ui.label(
                                     app.mounted_storages
@@ -65,7 +67,6 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                     .selected_text(app.new_storage_drive_letter.clone())
                                     .width(70.)
                                     .show_ui(ui, |ui| {
-                                        #[cfg(target_os = "windows")]
                                         for drive in &possible_drives {
                                             let current_value = &mut app.new_storage_drive_letter;
                                             let selected_value = drive.to_string();
@@ -84,6 +85,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                     });
                             }
 
+<<<<<<< HEAD
                             if ui.button(action_text).clicked() && cfg!(windows) {
                                 if is_mounted {
                                     app.mounted_storages.unmount(storage.name.clone());
@@ -103,6 +105,45 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                         );
                                     if app.new_storage_drive_letter != "N/A" && !is_already_mounted
                                     {
+=======
+                            if ui.button(action_text).clicked() {
+                                #[cfg(target_os = "windows")]
+                                {
+                                    if is_mounted {
+                                        app.mounted_storages.unmount(storage.name.clone());
+                                    } else {
+                                        // let drive_letter = app.new_storage_drive_letter.clone();
+                                        // let is_mounted = app.mounted_storages.is_drive_letter_mounted(
+                                        //     drive_letter.chars().next().unwrap(),
+                                        // );
+                                        // if is_mounted {
+                                        //     let possible_drives = available_drives();
+                                        //     app.new_storage_drive_letter =
+                                        //         possible_drives.first().unwrap().to_string();
+                                        // }
+                                        let is_already_mounted =
+                                            app.mounted_storages.is_drive_letter_mounted(
+                                                app.new_storage_drive_letter
+                                                    .chars()
+                                                    .next()
+                                                    .unwrap(),
+                                            );
+                                        if app.new_storage_drive_letter != "N/A"
+                                            && !is_already_mounted
+                                        {
+                                            app.mounted_storages.mount(
+                                                app.new_storage_drive_letter.clone(),
+                                                storage.name.clone(),
+                                            );
+                                        }
+                                    }
+                                }
+                                #[cfg(target_os = "linux")]
+                                {
+                                    if is_mounted {
+                                        app.mounted_storages.unmount(storage.name.clone());
+                                    } else {
+>>>>>>> 468624aaa7bb7e82313c5bfa51adf8d7c1883fcd
                                         app.mounted_storages.mount(
                                             app.new_storage_drive_letter.clone(),
                                             storage.name.clone(),
