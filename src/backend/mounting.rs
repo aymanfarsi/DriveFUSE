@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::Path, process::Command};
+use std::{collections::HashMap, process::Command};
 
 use directories::UserDirs;
 
@@ -9,8 +9,9 @@ use {
 };
 
 #[cfg(not(target_os = "windows"))]
-use {std::fs, std::fs::DirBuilder};
+use {path::Path, std::fs, std::fs::DirBuilder};
 
+#[cfg(target_os = "linux")]
 use crate::utilities::utils::unmount_delete_directory;
 
 use super::rclone::Storage;
@@ -173,6 +174,7 @@ impl MountingStorage {
 
                     match process {
                         Ok(_) => {
+                            #[cfg(target_os = "linux")]
                             unmount_delete_directory(name.clone());
                         }
                         Err(e) => {
@@ -187,36 +189,34 @@ impl MountingStorage {
     }
 
     pub fn mount(&mut self, driver_letter: String, name: String) {
-        let platform = std::env::consts::OS;
-        match platform {
-            "windows" => {
-                let id = Self::mount_windows(name.clone(), driver_letter.clone());
-                match id {
-                    Some(id) => {
-                        println!("Mounted {} to {}", name, driver_letter);
-                        self.drives.insert(name.clone(), id);
-                        self.mounted
-                            .insert(name, driver_letter.chars().next().unwrap());
-                    }
-                    None => {
-                        eprintln!("Failed to mount {} to {}", name, driver_letter);
-                    }
-                }
+        #[cfg(target_os = "windows")]
+        let id = Self::mount_windows(name.clone(), driver_letter.clone());
+        match id {
+            Some(id) => {
+                println!("Mounted {} to {}", name, driver_letter);
+                self.drives.insert(name.clone(), id);
+                self.mounted
+                    .insert(name, driver_letter.chars().next().unwrap());
             }
-            _ => {
-                let username = whoami::username();
-                let id = Self::mount_unix(name.clone());
-                match id {
-                    Some(id) => {
-                        println!("Mounted {} to /home/{}/drive_af/{}", username, name, name);
-                        self.drives.insert(name.clone(), id);
-                    }
-                    None => {
-                        eprintln!(
-                            "Failed to mount {} to /home/{}/drive_af/{}",
-                            username, name, name
-                        );
-                    }
+            None => {
+                eprintln!("Failed to mount {} to {}", name, driver_letter);
+            }
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            let username = whoami::username();
+            let id = Self::mount_unix(name.clone());
+            match id {
+                Some(id) => {
+                    println!("Mounted {} to /home/{}/drive_af/{}", username, name, name);
+                    self.drives.insert(name.clone(), id);
+                }
+                None => {
+                    eprintln!(
+                        "Failed to mount {} to /home/{}/drive_af/{}",
+                        username, name, name
+                    );
                 }
             }
         }
@@ -239,15 +239,18 @@ impl MountingStorage {
                 let process_id = *self.drives.get(&driver_letter).unwrap();
                 let success = Self::unmount_unix(process_id);
                 if success {
-                    let name = self
-                        .drives
-                        .iter()
-                        .find(|(_, &v)| v == process_id)
-                        .unwrap()
-                        .0
-                        .clone();
                     self.drives.remove(&driver_letter);
-                    unmount_delete_directory(name);
+                    #[cfg(target_os = "linux")]
+                    {
+                        let name = self
+                            .drives
+                            .iter()
+                            .find(|(_, &v)| v == process_id)
+                            .unwrap()
+                            .0
+                            .clone();
+                        unmount_delete_directory(name);
+                    }
                 } else {
                     eprintln!("Failed to unmount {}", driver_letter);
                 }
@@ -314,6 +317,7 @@ impl MountingStorage {
         success.success()
     }
 
+    #[cfg(target_os = "linux")]
     fn mount_unix(name: String) -> Option<u32> {
         let username = whoami::username();
         if !Path::new(&format!("/home/{}/drive_af/{}", username.clone(), name)).exists() {
