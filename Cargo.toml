@@ -5,6 +5,11 @@ authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
 rust-version = "1.70"
 build = "build.rs"
+description = "A cross-platform cloud storage mounter."
+
+[package.metadata.bundle]
+name = "DriveAF"
+identifier = "io.github.aymanfarsi.drive_af"
 
 [dependencies]
 # gui
