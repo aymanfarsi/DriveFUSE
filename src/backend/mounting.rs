@@ -250,7 +250,7 @@ impl MountingStorage {
                             .unwrap()
                             .0
                             .clone();
-                        unmount_delete_directory(name);
+                        // unmount_delete_directory(name);
                         self.drives.remove(&driver_letter);
                     }
                 } else {
@@ -360,15 +360,17 @@ impl MountingStorage {
         let mut cmd = Command::new("fusermount");
         let process = cmd.args([
             "-u",
-            &format!("/home/{}/driveaf/{}", whoami::username(), name),
+            &format!("/home/{}/drive_af/{}/", whoami::username(), name),
         ]);
-
-        let process = process.spawn();
+        let process = process.status();
 
         match process {
-            Ok(_) => true,
-            Err(e) => {
-                eprintln!("Error unmounting {} due to {}", _id, e);
+            Ok(code) => {
+                println!("fusermount exitcode: {}", code);
+                code.code() == Some(0)
+            }
+            Err(err) => {
+                eprintln!("Error unmounting {} due to {}", name, err);
                 false
             }
         }
