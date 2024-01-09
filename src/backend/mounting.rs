@@ -243,7 +243,7 @@ impl MountingStorage {
                 if success {
                     #[cfg(target_os = "linux")]
                     {
-                        let name = self
+                        let _name = self
                             .drives
                             .iter()
                             .find(|(_, &v)| v == process_id)
