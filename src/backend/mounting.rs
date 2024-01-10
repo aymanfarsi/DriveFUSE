@@ -164,20 +164,10 @@ impl MountingStorage {
             _ => {
                 let mut success = true;
                 for (name, process_id) in self.drives.iter() {
-                    let mut cmd = Command::new("kill");
-                    let process = cmd.arg("-9").arg(&process_id.to_string());
-
-                    let process = process.spawn();
-
-                    match process {
-                        Ok(_) => {
-                            // #[cfg(target_os = "linux")]
-                            // unmount_delete_directory(name.clone());
-                        }
-                        Err(e) => {
-                            eprintln!("Error unmounting {} due to {}", name, e);
-                            success = false;
-                        }
+                    let success_unmount = Self::unmount_unix(*process_id, name.to_string());
+                    if !success_unmount {
+                        eprintln!("Error unmounting {}", name);
+                        success = false;
                     }
                 }
                 success
