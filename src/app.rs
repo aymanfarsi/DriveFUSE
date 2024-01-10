@@ -212,12 +212,13 @@ impl eframe::App for RcloneApp {
                 true => true,
                 false => {
                     eprintln!("Failed to unmount all drives");
+                    self.is_close_requested = false;
                     false
                 }
             },
             false => {
                 self.tx_egui.send(Message::HideApp).unwrap();
-                self.is_close_requested = true;
+                self.is_close_requested = false;
                 false
             }
         }
