@@ -2,14 +2,12 @@ use std::{collections::HashMap, process::Command};
 
 #[cfg(target_os = "windows")]
 use {
-    crate::utilities::utils::available_drives, std::os::windows::process::CommandExt,
-    winapi::um::winbase,
+    crate::utilities::utils::available_drives, directories::UserDirs,
+    std::os::windows::process::CommandExt, winapi::um::winbase,
 };
 
 #[cfg(not(target_os = "windows"))]
-use {std::fs, std::fs::DirBuilder, std::path::Path};
-
-use directories::UserDirs;
+use {std::fs::DirBuilder, std::path::Path};
 
 use super::rclone::Storage;
 
@@ -41,18 +39,21 @@ impl MountingStorage {
         #[cfg(target_os = "windows")]
         return self.mounted.contains_key(&name);
 
-        #[cfg(not(target_os = "windows"))]
+        #[cfg(target_family = "unix")]
         {
             let path = format!("/home/{}/drive_af/{}", whoami::username(), name.clone());
             let path = Path::new(&path);
-            if let Ok(entries) = fs::read_dir(path) {
-                for entry in entries.flatten() {
-                    if entry.file_type().map(|ft| ft.is_file()).unwrap_or(false) {
-                        return true;
-                    }
-                }
-            }
-            false
+            //if let Ok(entries) = fs::read_dir(path) {
+            //    for entry in entries.flatten() {
+            //        if entry.file_type().map(|ft| ft.is_file()).unwrap_or(false) {
+            //            return true;
+            //        }
+            //    }
+            //}
+            //false
+            path.read_dir()
+                .map(|mut i| i.next().is_some())
+                .unwrap_or(true)
         }
     }
 
@@ -160,7 +161,7 @@ impl MountingStorage {
             }
             success
         }
-        #[cfg(target_os = "unix")]
+        #[cfg(target_family = "unix")]
         {
             let mut success = true;
             for (name, process_id) in self.drives.iter() {
@@ -193,6 +194,7 @@ impl MountingStorage {
 
         #[cfg(target_os = "linux")]
         {
+            println!("{}", driver_letter);
             let username = whoami::username();
             let id = Self::mount_unix(name.clone());
             match id {
@@ -222,7 +224,7 @@ impl MountingStorage {
                 eprintln!("Failed to unmount {}", driver_letter);
             }
         }
-        #[cfg(target_os = "unix")]
+        #[cfg(target_family = "unix")]
         {
             let process_id = *self.drives.get(&driver_letter).unwrap();
             let success = Self::unmount_unix(process_id, driver_letter.clone());
@@ -245,6 +247,7 @@ impl MountingStorage {
         }
     }
 
+    #[cfg(target_os = "windows")]
     fn mount_windows(name: String, driver_letter: String) -> Option<u32> {
         let doc_app = UserDirs::new()
             .unwrap()
@@ -277,7 +280,6 @@ impl MountingStorage {
         // .arg("--buffer-size")
         // .arg("64M")
 
-        #[cfg(target_os = "windows")]
         process.creation_flags(winbase::CREATE_NO_WINDOW);
         let process = process.spawn();
 
@@ -290,11 +292,11 @@ impl MountingStorage {
         }
     }
 
+    #[cfg(target_os = "windows")]
     fn unmount_windows(id: u32) -> bool {
         let mut cmd = Command::new("taskkill");
         let process = cmd.arg("/F").arg("/PID").arg(&id.to_string());
 
-        #[cfg(target_os = "windows")]
         process.creation_flags(winbase::CREATE_NO_WINDOW);
 
         let mut process = process.spawn().expect("failed to execute process");
@@ -338,30 +340,28 @@ impl MountingStorage {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_family = "unix")]
     fn unmount_unix(_id: u32, name: String) -> bool {
         // let mut cmd = Command::new("kill");
         // let process = cmd.arg("-9").arg(&id.to_string());
+
+        let program = if cfg!(target_os = "linux") {
+            "fusermount"
+        } else {
+            "umount"
+        };
+
+        let mut cmd: Command = Command::new(program);
+
         #[cfg(target_os = "linux")]
-        {
-            let mut cmd = Command::new("fusermount");
-            let process = cmd.args([
-                "-u",
-                &format!("/home/{}/drive_af/{}/", whoami::username(), name),
-            ]);
-        }
-        #[cfg(target_os = "macos")]
-        {
-            let mut cmd = Command::new("umount");
-            let process = cmd.arg(&format!("/home/{}/drive_af/{}/", whoami::username(), name));
-        }
-        let process = process.status();
+        cmd.arg("-u");
+
+        cmd.arg(&format!("/home/{}/drive_af/{}/", whoami::username(), name));
+
+        let process = cmd.status();
 
         match process {
-            Ok(code) => {
-                println!("fusermount exitcode: {}", code);
-                code.code() == Some(0)
-            }
+            Ok(code) => code.code() == Some(0),
             Err(err) => {
                 eprintln!("Error unmounting {} due to {}", name, err);
                 false
