@@ -1,7 +1,5 @@
 use std::{collections::HashMap, process::Command};
 
-use directories::UserDirs;
-
 #[cfg(target_os = "windows")]
 use {
     crate::utilities::utils::available_drives, std::os::windows::process::CommandExt,
@@ -11,8 +9,7 @@ use {
 #[cfg(not(target_os = "windows"))]
 use {std::fs, std::fs::DirBuilder, std::path::Path};
 
-#[cfg(target_os = "linux")]
-use crate::utilities::utils::unmount_delete_directory;
+use directories::UserDirs;
 
 use super::rclone::Storage;
 
@@ -188,13 +185,13 @@ impl MountingStorage {
         }
     }
 
-    pub fn mount(&mut self, driver_letter: String, name: String) {
+    pub fn mount(&mut self, _driver_letter: String, name: String) {
         #[cfg(target_os = "windows")]
         {
             let id = Self::mount_windows(name.clone(), driver_letter.clone());
             match id {
                 Some(id) => {
-                    println!("Mounted {} to {}", name, driver_letter);
+                    println!("Mounted {} to {}", name, _driver_letter);
                     self.drives.insert(name.clone(), id);
                     self.mounted
                         .insert(name, driver_letter.chars().next().unwrap());
@@ -260,7 +257,6 @@ impl MountingStorage {
         }
     }
 
-    #[cfg(target_os = "windows")]
     fn mount_windows(name: String, driver_letter: String) -> Option<u32> {
         let doc_app = UserDirs::new()
             .unwrap()
