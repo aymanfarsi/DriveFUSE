@@ -10,6 +10,9 @@ description = "A cross-platform cloud storage mounter."
 [package.metadata.bundle]
 name = "DriveAF"
 identifier = "io.github.aymanfarsi.drive_af"
+icon = ["DriveAF.ico", "icon-green.ico", "icon-red.ico"]
+version = "1.0.0"
+resources = ["assets"]
 
 [dependencies]
 # gui
