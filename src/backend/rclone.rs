@@ -13,7 +13,10 @@ use winapi::um::winbase;
 
 use crate::utilities::{
     enums::StorageType,
-    utils::{add_google_drive_storage, add_onedrive_storage, app_config_path, rclone_config_path},
+    utils::{
+        add_google_drive_storage, add_onedrive_storage, app_config_path, get_info,
+        rclone_config_path,
+    },
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -136,6 +139,18 @@ impl Rclone {
                         });
                     }
                     _ => continue,
+                }
+            }
+        }
+
+        for item in storages.clone() {
+            let res = get_info(item.name.clone());
+            match res {
+                Ok(output) => {
+                    println!("{} has output of\n{}\n", item.name, output);
+                }
+                Err(err) => {
+                    println!("Error: {}", err);
                 }
             }
         }

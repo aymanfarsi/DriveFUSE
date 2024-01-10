@@ -1,4 +1,8 @@
-use std::{env, path::PathBuf, process::Command};
+use std::{
+    env,
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
 use auto_launch::AutoLaunchBuilder;
 use directories::BaseDirs;
@@ -10,17 +14,32 @@ use {std::os::windows::process::CommandExt, winapi::um::winbase, windows::Win32}
 
 use crate::RcloneApp;
 
+pub fn get_info(name: String) -> Result<String, String> {
+    let mut cmd = Command::new("rclone");
+    cmd.args(["about", &format!("{}:", name), "--json"])
+        .stdout(Stdio::piped());
+
+    let process = cmd.output();
+    match process {
+        Ok(result) => {
+            let output = String::from_utf8_lossy(&result.stdout);
+            Ok(output.to_string())
+        }
+        Err(err) => {
+            eprintln!("Error while getting storage {} about info", name);
+            Err(err.to_string())
+        }
+    }
+}
+
 #[cfg(target_os = "linux")]
 pub fn unmount_delete_directory(name: String) {
     use std::{fs, path::Path};
 
     let username = whoami::username();
     let path = format!("/home/{}/drive_af/{}", username, name);
-    
-    let _ = Command::new("rm")
-        .args(["-d", &path])
-        .spawn()
-        .unwrap();
+
+    let _ = Command::new("rm").args(["-d", &path]).spawn().unwrap();
 
     fs::remove_dir(Path::new(&path)).unwrap();
 }
@@ -89,7 +108,10 @@ pub fn app_config_path() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("rclone_app"));
     #[cfg(not(target_os = "windows"))]
-    Some(PathBuf::from(format!("/home/{}/.config/rclone_app", whoami::username())))
+    Some(PathBuf::from(format!(
+        "/home/{}/.config/rclone_app",
+        whoami::username()
+    )))
 }
 
 pub fn add_google_drive_storage(name: String) {
