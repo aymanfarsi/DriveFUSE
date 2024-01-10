@@ -1,6 +1,6 @@
 [package]
 name = "drive_af"
-version = "0.3.1"
+version = "0.5.3"
 authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
 rust-version = "1.70"
