@@ -37,6 +37,7 @@ tokio = { version = "1.33.0", features = [
 ] }
 rand = "0.8.5"
 auto-launch = "0.5.0"
+machine-uid = "0.5.1"
 
 
 # windows dependencies

@@ -1,7 +1,5 @@
 use std::{collections::HashMap, process::Command};
 
-use directories::UserDirs;
-
 #[cfg(target_os = "windows")]
 use {
     crate::utilities::utils::available_drives, std::os::windows::process::CommandExt,
@@ -9,10 +7,9 @@ use {
 };
 
 #[cfg(not(target_os = "windows"))]
-use {path::Path, std::fs, std::fs::DirBuilder};
+use {std::fs, std::fs::DirBuilder, std::path::Path};
 
-#[cfg(target_os = "linux")]
-use crate::utilities::utils::unmount_delete_directory;
+use directories::UserDirs;
 
 use super::rclone::Storage;
 
@@ -167,20 +164,10 @@ impl MountingStorage {
             _ => {
                 let mut success = true;
                 for (name, process_id) in self.drives.iter() {
-                    let mut cmd = Command::new("kill");
-                    let process = cmd.arg("-9").arg(&process_id.to_string());
-
-                    let process = process.spawn();
-
-                    match process {
-                        Ok(_) => {
-                            #[cfg(target_os = "linux")]
-                            unmount_delete_directory(name.clone());
-                        }
-                        Err(e) => {
-                            eprintln!("Error unmounting {} due to {}", name, e);
-                            success = false;
-                        }
+                    let success_unmount = Self::unmount_unix(*process_id, name.to_string());
+                    if !success_unmount {
+                        eprintln!("Error unmounting {}", name);
+                        success = false;
                     }
                 }
                 success
@@ -188,18 +175,20 @@ impl MountingStorage {
         }
     }
 
-    pub fn mount(&mut self, driver_letter: String, name: String) {
+    pub fn mount(&mut self, _driver_letter: String, name: String) {
         #[cfg(target_os = "windows")]
-        let id = Self::mount_windows(name.clone(), driver_letter.clone());
-        match id {
-            Some(id) => {
-                println!("Mounted {} to {}", name, driver_letter);
-                self.drives.insert(name.clone(), id);
-                self.mounted
-                    .insert(name, driver_letter.chars().next().unwrap());
-            }
-            None => {
-                eprintln!("Failed to mount {} to {}", name, driver_letter);
+        {
+            let id = Self::mount_windows(name.clone(), driver_letter.clone());
+            match id {
+                Some(id) => {
+                    println!("Mounted {} to {}", name, _driver_letter);
+                    self.drives.insert(name.clone(), id);
+                    self.mounted
+                        .insert(name, driver_letter.chars().next().unwrap());
+                }
+                None => {
+                    eprintln!("Failed to mount {} to {}", name, driver_letter);
+                }
             }
         }
 
@@ -237,19 +226,19 @@ impl MountingStorage {
             }
             _ => {
                 let process_id = *self.drives.get(&driver_letter).unwrap();
-                let success = Self::unmount_unix(process_id);
+                let success = Self::unmount_unix(process_id, driver_letter.clone());
                 if success {
-                    self.drives.remove(&driver_letter);
                     #[cfg(target_os = "linux")]
                     {
-                        let name = self
+                        let _name = self
                             .drives
                             .iter()
                             .find(|(_, &v)| v == process_id)
                             .unwrap()
                             .0
                             .clone();
-                        unmount_delete_directory(name);
+                        // unmount_delete_directory(name);
+                        self.drives.remove(&driver_letter);
                     }
                 } else {
                     eprintln!("Failed to unmount {}", driver_letter);
@@ -351,16 +340,23 @@ impl MountingStorage {
         }
     }
 
-    fn unmount_unix(id: u32) -> bool {
-        let mut cmd = Command::new("kill");
-        let process = cmd.arg("-9").arg(&id.to_string());
-
-        let process = process.spawn();
+    fn unmount_unix(_id: u32, name: String) -> bool {
+        // let mut cmd = Command::new("kill");
+        // let process = cmd.arg("-9").arg(&id.to_string());
+        let mut cmd = Command::new("fusermount");
+        let process = cmd.args([
+            "-u",
+            &format!("/home/{}/drive_af/{}/", whoami::username(), name),
+        ]);
+        let process = process.status();
 
         match process {
-            Ok(_) => true,
-            Err(e) => {
-                eprintln!("Error unmounting {} due to {}", id, e);
+            Ok(code) => {
+                println!("fusermount exitcode: {}", code);
+                code.code() == Some(0)
+            }
+            Err(err) => {
+                eprintln!("Error unmounting {} due to {}", name, err);
                 false
             }
         }

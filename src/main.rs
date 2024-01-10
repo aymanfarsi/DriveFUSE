@@ -18,6 +18,9 @@ use {std::os::windows::process::CommandExt, winapi::um::winbase};
 use std::fs::create_dir_all;
 
 fn main() {
+    let machine_id = machine_uid::get().unwrap();
+    println!("{}", machine_id);
+
     let platform = env::consts::OS;
     let missing_dependencies = check_dependencies(platform);
     if !missing_dependencies.is_empty() {

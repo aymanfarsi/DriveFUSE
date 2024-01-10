@@ -16,14 +16,13 @@ pub fn unmount_delete_directory(name: String) {
 
     let username = whoami::username();
     let path = format!("/home/{}/drive_af/{}", username, name);
-    let path = Path::new(&path);
-
-    let _ = Command::new("fusermount")
-        .args(["-u", path.to_str().unwrap()])
+    
+    let _ = Command::new("rm")
+        .args(["-d", &path])
         .spawn()
         .unwrap();
 
-    fs::remove_dir(path).unwrap();
+    fs::remove_dir(Path::new(&path)).unwrap();
 }
 
 pub fn enable_auto_mount(app: &mut RcloneApp) {
@@ -90,7 +89,7 @@ pub fn app_config_path() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("rclone_app"));
     #[cfg(not(target_os = "windows"))]
-    Some(PathBuf::from("~/.config/rclone_app"))
+    Some(PathBuf::from(format!("/home/{}/.config/rclone_app", whoami::username())))
 }
 
 pub fn add_google_drive_storage(name: String) {
