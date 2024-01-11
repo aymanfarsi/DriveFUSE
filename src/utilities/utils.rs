@@ -19,6 +19,9 @@ pub fn get_info(name: String) -> Result<String, String> {
     cmd.args(["about", &format!("{}:", name), "--json"])
         .stdout(Stdio::piped());
 
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
     let process = cmd.output();
     match process {
         Ok(result) => {
