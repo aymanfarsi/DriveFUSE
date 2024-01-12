@@ -3,26 +3,21 @@
 # The type as listed above
 Type=Application
 
-# The version of the desktop entry specification to which this file complies
-Version=0.5
-
 # The name of the application
 Name=DriveAF
 
 # A comment which can/will be used as a tooltip
 Comment=DriveAF storage mounter
 
-# The path to the folder in which the executable is run
-Path=/home/evildave/dev/drive_af/target/release
-
 # The executable of the application, possibly with arguments.
-Exec=drive_af
+Exec=/home/evildave/dev/drive_af/target/release/drive_af
 
 # The name of the icon that will be used to display this entry
-Icon=DriveAF-nobg.png
+Icon=/home/evildave/dev/drive_af/assets/DriveAF-nobg.png
 
 # Describes whether this application needs to be run in a terminal or not
 Terminal=false
 
 # Describes the categories in which this entry should be shown
-Categories=Filesystem
+# Categories=Utilities
+
