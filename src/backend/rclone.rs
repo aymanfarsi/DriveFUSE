@@ -13,10 +13,7 @@ use winapi::um::winbase;
 
 use crate::utilities::{
     enums::StorageType,
-    utils::{
-        add_google_drive_storage, add_onedrive_storage, app_config_path, get_info,
-        rclone_config_path,
-    },
+    utils::{add_google_drive_storage, add_onedrive_storage, app_config_path, rclone_config_path},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -64,6 +61,8 @@ impl Rclone {
         for line in buffered.lines() {
             lines.push(line.unwrap());
         }
+
+        println!("Read app config");
 
         lines
     }
@@ -154,6 +153,8 @@ impl Rclone {
         //        }
         //    }
         //}
+
+        println!("Parsed rclone config file");
 
         storages
     }

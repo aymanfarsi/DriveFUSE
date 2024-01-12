@@ -14,6 +14,23 @@ use {std::os::windows::process::CommandExt, winapi::um::winbase, windows::Win32}
 
 use crate::RcloneApp;
 
+#[cfg(target_os = "linux")]
+pub fn check_if_mounted(_name: String) {
+    let mut cmd = Command::new("df");
+    cmd.args(["-hT", "|", "grep", "rclone"]);
+
+    let process = cmd.output();
+    match process {
+        Ok(result) => {
+            let output = String::from_utf8_lossy(&result.stdout);
+            println!("{}", output);
+        }
+        Err(err) => {
+            println!("{}", err);
+        }
+    }
+}
+
 pub fn get_info(name: String) -> Result<String, String> {
     let mut cmd = Command::new("rclone");
     cmd.args(["about", &format!("{}:", name), "--json"])

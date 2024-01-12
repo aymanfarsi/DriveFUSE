@@ -9,15 +9,32 @@ use std::{
 
 use drive_af::RcloneApp;
 use eframe::IconData;
+use std::io;
 use tokio::runtime::Runtime;
+use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
 
 #[cfg(target_os = "windows")]
 use {std::os::windows::process::CommandExt, winapi::um::winbase};
 
-#[cfg(target_os = "linux")]
 use std::fs::create_dir_all;
 
 fn main() {
+    let username = whoami::username();
+
+    let dir = format!("/home/{}/Documents/DriveAF/logs", username.clone());
+    if !Path::new(&dir).exists() {
+        create_dir_all(&dir).unwrap();
+    }
+
+    let file_appender = tracing_appender::rolling::never(dir, "logs.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+    let collector = tracing_subscriber::registry()
+        .with(EnvFilter::from_default_env().add_directive(tracing::Level::TRACE.into()))
+        .with(fmt::Subscriber::new().with_writer(io::stdout))
+        .with(fmt::Subscriber::new().with_writer(non_blocking));
+    tracing::collect::set_global_default(collector).expect("Unable to set a global collector");
+
     let machine_id = machine_uid::get().unwrap();
     println!("{}", machine_id);
 
@@ -31,7 +48,7 @@ fn main() {
 
     if platform == "windows" || platform == "linux" {
         #[cfg(target_os = "linux")]
-        create_dir_all(format!("/home/{}/drive_af", whoami::username())).unwrap();
+        create_dir_all(format!("/home/{}/drive_af", username)).unwrap();
 
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
