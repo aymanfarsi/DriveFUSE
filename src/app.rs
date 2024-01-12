@@ -207,6 +207,15 @@ impl eframe::App for RcloneApp {
     }
 
     fn on_close_event(&mut self) -> bool {
+        #[cfg(target_os = "linux")]
+        match self.mounted_storages.unmount_all() {
+            true => true,
+            false => {
+                eprintln!("Failed to unmount all drives");
+                false
+            }
+        }
+        #[cfg(target_os = "windows")]
         match self.is_close_requested {
             true => match self.mounted_storages.unmount_all() {
                 true => true,
