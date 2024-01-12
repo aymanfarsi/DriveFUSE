@@ -358,6 +358,9 @@ impl MountingStorage {
 
         cmd.arg(&format!("/home/{}/drive_af/{}/", whoami::username(), name));
 
+        #[cfg(target_os = "linux")]
+        cmd.arg("-z");
+
         let process = cmd.status();
 
         match process {

@@ -143,17 +143,17 @@ impl Rclone {
             }
         }
 
-        for item in storages.clone() {
-            let res = get_info(item.name.clone());
-            match res {
-                Ok(output) => {
-                    println!("{} has output of\n{}\n", item.name, output);
-                }
-                Err(err) => {
-                    println!("Error: {}", err);
-                }
-            }
-        }
+        //for item in storages.clone() {
+        //    let res = get_info(item.name.clone());
+        //    match res {
+        //        Ok(output) => {
+        //            println!("{} has output of\n{}\n", item.name, output);
+        //        }
+        //        Err(err) => {
+        //            println!("Error: {}", err);
+        //        }
+        //    }
+        //}
 
         storages
     }
