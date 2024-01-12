@@ -1,5 +1,5 @@
 #![warn(clippy::all, rust_2018_idioms)]
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::{
     env,
@@ -9,9 +9,8 @@ use std::{
 
 use drive_af::RcloneApp;
 use eframe::IconData;
-use std::io;
 use tokio::runtime::Runtime;
-use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
+use tracing_subscriber::fmt::time::ChronoLocal;
 
 #[cfg(target_os = "windows")]
 use {std::os::windows::process::CommandExt, winapi::um::winbase};
@@ -21,22 +20,31 @@ use std::fs::create_dir_all;
 fn main() {
     let username = whoami::username();
 
-    let dir = format!("/home/{}/Documents/DriveAF/logs", username.clone());
+    let dir = format!("/home/{}/Documents/drive_af/logs", username.clone());
     if !Path::new(&dir).exists() {
         create_dir_all(&dir).unwrap();
     }
 
-    let file_appender = tracing_appender::rolling::never(dir, "logs.log");
+    let file_appender = tracing_appender::rolling::never(dir, "drive_af_logs.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
-    let collector = tracing_subscriber::registry()
-        .with(EnvFilter::from_default_env().add_directive(tracing::Level::TRACE.into()))
-        .with(fmt::Subscriber::new().with_writer(io::stdout))
-        .with(fmt::Subscriber::new().with_writer(non_blocking));
-    tracing::collect::set_global_default(collector).expect("Unable to set a global collector");
+    let timer = ChronoLocal::new("%m/%d/%YT%H:%M:%S".to_owned());
 
-    let machine_id = machine_uid::get().unwrap();
-    println!("{}", machine_id);
+    tracing_subscriber::fmt()
+        .with_ansi(false)
+        .with_level(true)
+        .with_file(true)
+        .with_target(true)
+        .with_line_number(true)
+        .with_timer(timer)
+        .with_writer(std::io::stderr)
+        .with_writer(non_blocking)
+        .init();
+
+    match machine_uid::get() {
+        Ok(machine_id) => tracing::info!("Machine ID is: {}", machine_id),
+        Err(err) => tracing::error!("Error in main while getting machine id: {}", err),
+    };
 
     let platform = env::consts::OS;
     let missing_dependencies = check_dependencies(platform);
