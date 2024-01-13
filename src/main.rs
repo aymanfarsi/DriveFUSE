@@ -13,14 +13,29 @@ use tokio::runtime::Runtime;
 use tracing_subscriber::fmt::time::ChronoLocal;
 
 #[cfg(target_os = "windows")]
-use {std::os::windows::process::CommandExt, winapi::um::winbase};
+use {directories::UserDirs, std::os::windows::process::CommandExt, winapi::um::winbase};
 
 use std::fs::create_dir_all;
 
 fn main() {
-    let username = whoami::username();
+    let dir = if cfg!(target_os = "windows") {
+        UserDirs::new()
+            .unwrap()
+            .document_dir()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
+            + "/drive_af/logs"
+    } else {
+        #[cfg(target_family = "unix")]
+        {
+            let username = whoami::username();
+            format!("/home/{}/Documents/drive_af/logs", username.clone());
+        }
+        panic!("Unsupported platform!")
+    };
 
-    let dir = format!("/home/{}/Documents/drive_af/logs", username.clone());
     if !Path::new(&dir).exists() {
         create_dir_all(&dir).unwrap();
     }
