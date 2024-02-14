@@ -117,7 +117,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                         }
                                     }
                                 }
-                                #[cfg(target_os = "linux")]
+                                #[cfg(target_family = "unix")]
                                 {
                                     if is_mounted {
                                         app.mounted_storages.unmount(storage.name.clone());

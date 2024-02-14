@@ -231,5 +231,13 @@ impl eframe::App for RcloneApp {
                 false
             }
         }
+        #[cfg(target_os = "macos")]
+        match self.mounted_storages.unmount_all() {
+            true => true,
+            false => {
+                eprintln!("Failed to unmount all drives");
+                false
+            }
+        }
     }
 }

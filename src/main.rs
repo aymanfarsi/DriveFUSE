@@ -29,10 +29,15 @@ fn main() {
             .to_string()
             + "/drive_af/logs"
     } else {
-        #[cfg(target_family = "unix")]
+        #[cfg(target_os = "linux")]
         {
             let username = whoami::username();
             format!("/home/{}/Documents/drive_af/logs", username.clone())
+        }
+        #[cfg(target_os = "macos")]
+        {
+            let username = whoami::username();
+            format!("/Users/{}/Documents/drive_af/logs", username.clone())
         }
         // panic!("Unsupported platform!")
     };
@@ -70,9 +75,12 @@ fn main() {
         exit(1);
     }
 
-    if platform == "windows" || platform == "linux" {
+    if platform == "windows" || platform == "linux" || platform == "macos" {
         #[cfg(target_os = "linux")]
         create_dir_all(format!("/home/{}/drive_af", whoami::username())).unwrap();
+
+        #[cfg(target_os = "macos")]
+        create_dir_all(format!("/Users/{}/drive_af", whoami::username())).unwrap();
 
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
@@ -120,8 +128,8 @@ fn check_dependencies(platform: &str) -> Vec<String> {
         }
         "macos" => {
             // Check if FUSE is installed
-            let mut cmd = Command::new("pkg-config");
-            let output = cmd.arg("--exists").arg("fuse");
+            let mut cmd = Command::new("which");
+            let output = cmd.arg("umount");
 
             let output = output.output().unwrap();
             if !output.status.success() {

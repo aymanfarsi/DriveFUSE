@@ -32,6 +32,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
     })
     .unwrap();
 
+    #[cfg(target_os = "windows")]
     tray.inner_mut().add_separator().unwrap();
 
     let quit_tx = tx.clone();

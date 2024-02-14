@@ -39,7 +39,7 @@ impl MountingStorage {
         #[cfg(target_os = "windows")]
         return self.mounted.contains_key(&name);
 
-        #[cfg(target_family = "unix")]
+        #[cfg(target_os = "linux")]
         {
             let path = format!("/home/{}/drive_af/{}", whoami::username(), name.clone());
             let path = Path::new(&path);
@@ -51,6 +51,15 @@ impl MountingStorage {
             //    }
             //}
             //false
+            path.read_dir()
+                .map(|mut i| i.next().is_some())
+                .unwrap_or(false)
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            let path = format!("/Users/{}/drive_af/{}", whoami::username(), name.clone());
+            let path = Path::new(&path);
             path.read_dir()
                 .map(|mut i| i.next().is_some())
                 .unwrap_or(false)
@@ -90,10 +99,16 @@ impl MountingStorage {
         {
             let mut success = true;
             let username = whoami::username();
+            let root = if cfg!(target_os = "macos") {
+                "/Users"
+            } else {
+                "/home"
+            };
 
             for drive in drives {
                 if !Path::new(&format!(
-                    "/home/{}/drive_af/{}",
+                    "{}/{}/drive_af/{}",
+                    root,
                     username.clone(),
                     drive.name
                 ))
@@ -101,7 +116,7 @@ impl MountingStorage {
                 {
                     DirBuilder::new()
                         .recursive(true)
-                        .create(format!("/home/{}/drive_af/{}", username, drive.name))
+                        .create(format!("{}/{}/drive_af/{}", root, username, drive.name))
                         .unwrap();
                 }
                 let mut cmd = Command::new("rclone");
@@ -109,7 +124,8 @@ impl MountingStorage {
                     .arg("mount")
                     .arg(format!("{}:", drive.name))
                     .arg(format!(
-                        "/home/{}/drive_af/{}",
+                        "{}/{}/drive_af/{}",
+                        root,
                         username.clone(),
                         drive.name
                     ))
@@ -124,7 +140,8 @@ impl MountingStorage {
                 match process {
                     Ok(process) => {
                         println!(
-                            "Mounted {} to /home/{}/drive_af/{}",
+                            "Mounted {} to {}/{}/drive_af/{}",
+                            root,
                             username.clone(),
                             drive.name,
                             drive.name
@@ -133,7 +150,8 @@ impl MountingStorage {
                     }
                     Err(e) => {
                         eprintln!(
-                            "Error mounting {} at /home/{}/drive_af/{}: due to {}",
+                            "Error mounting {} at {}/{}/drive_af/{}: due to {}",
+                            root,
                             username.clone(),
                             drive.name,
                             drive.name,
@@ -210,6 +228,25 @@ impl MountingStorage {
                 }
             }
         }
+
+        #[cfg(target_os = "macos")]
+        {
+            println!("{}", driver_letter);
+            let username = whoami::username();
+            let id = Self::mount_unix(name.clone());
+            match id {
+                Some(id) => {
+                    println!("Mounted {} to /Users/{}/drive_af/{}", username, name, name);
+                    self.drives.insert(name.clone(), id);
+                }
+                None => {
+                    eprintln!(
+                        "Failed to mount {} to /Users/{}/drive_af/{}",
+                        username, name, name
+                    );
+                }
+            }
+        }
     }
 
     pub fn unmount(&mut self, driver_letter: String) {
@@ -224,12 +261,34 @@ impl MountingStorage {
                 eprintln!("Failed to unmount {}", driver_letter);
             }
         }
-        #[cfg(target_family = "unix")]
+        #[cfg(target_os = "linux")]
         {
             let process_id = *self.drives.get(&driver_letter).unwrap();
             let success = Self::unmount_unix(process_id, driver_letter.clone());
             if success {
                 #[cfg(target_os = "linux")]
+                {
+                    let _name = self
+                        .drives
+                        .iter()
+                        .find(|(_, &v)| v == process_id)
+                        .unwrap()
+                        .0
+                        .clone();
+                    // unmount_delete_directory(name);
+                    self.drives.remove(&driver_letter);
+                }
+            } else {
+                eprintln!("Failed to unmount {}", driver_letter);
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            let process_id = *self.drives.get(&driver_letter).unwrap();
+            let success = Self::unmount_unix(process_id, driver_letter.clone());
+            if success {
+                #[cfg(target_os = "macos")]
                 {
                     let _name = self
                         .drives
@@ -340,10 +399,49 @@ impl MountingStorage {
         }
     }
 
+    #[cfg(target_os = "macos")]
+    fn mount_unix(name: String) -> Option<u32> {
+        let username = whoami::username();
+        if !Path::new(&format!("/Users/{}/drive_af/{}", username.clone(), name)).exists() {
+            DirBuilder::new()
+                .recursive(true)
+                .create(format!("/Users/{}/drive_af/{}", username, name))
+                .unwrap();
+        }
+        let mut cmd = Command::new("rclone");
+        let process = cmd
+            .arg("mount")
+            .arg(format!("{}:", name))
+            .arg(format!("/Users/{}/drive_af/{}", username, name))
+            .arg("--vfs-cache-mode")
+            .arg("full")
+            //.arg("--dir-cache-time")
+            //.arg("1000h")
+            .arg("--allow-other");
+
+        let process = process.spawn();
+
+        match process {
+            Ok(process) => Some(process.id()),
+            Err(e) => {
+                eprintln!(
+                    "Error mounting {} at /Users/{}/drive_af/{}: due to {}",
+                    username, name, name, e
+                );
+                None
+            }
+        }
+    }
+
     #[cfg(target_family = "unix")]
     fn unmount_unix(_id: u32, name: String) -> bool {
         // let mut cmd = Command::new("kill");
         // let process = cmd.arg("-9").arg(&id.to_string());
+        let root = if cfg!(target_os = "macos") {
+            "/Users"
+        } else {
+            "/home"
+        };
 
         let program = if cfg!(target_os = "linux") {
             "fusermount"
@@ -356,7 +454,12 @@ impl MountingStorage {
         #[cfg(target_os = "linux")]
         cmd.arg("-u");
 
-        cmd.arg(&format!("/home/{}/drive_af/{}/", whoami::username(), name));
+        cmd.arg(&format!(
+            "{}/{}/drive_af/{}/",
+            root,
+            whoami::username(),
+            name
+        ));
 
         #[cfg(target_os = "linux")]
         cmd.arg("-z");

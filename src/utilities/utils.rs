@@ -14,7 +14,7 @@ use {std::os::windows::process::CommandExt, winapi::um::winbase, windows::Win32}
 
 use crate::RcloneApp;
 
-#[cfg(target_os = "linux")]
+#[cfg(target_family = "unix")]
 pub fn check_if_mounted(_name: String) {
     let mut cmd = Command::new("df");
     cmd.args(["-hT", "|", "grep", "rclone"]);
@@ -58,6 +58,18 @@ pub fn unmount_delete_directory(name: String) {
 
     let username = whoami::username();
     let path = format!("/home/{}/drive_af/{}", username, name);
+
+    let _ = Command::new("rm").args(["-d", &path]).spawn().unwrap();
+
+    fs::remove_dir(Path::new(&path)).unwrap();
+}
+
+#[cfg(target_os = "macos")]
+pub fn unmount_delete_directory(name: String) {
+    use std::{fs, path::Path};
+
+    let username = whoami::username();
+    let path = format!("/Users/{}/drive_af/{}", username, name);
 
     let _ = Command::new("rm").args(["-d", &path]).spawn().unwrap();
 
@@ -121,17 +133,32 @@ pub fn available_drives() -> Vec<char> {
 }
 
 pub fn rclone_config_path() -> Option<PathBuf> {
-    BaseDirs::new().map(|base_dirs| base_dirs.config_dir().join("rclone"))
+    if cfg!(any(target_os = "windows", target_os = "linux")) {
+        BaseDirs::new().map(|base_dirs| base_dirs.config_dir().join("rclone"))
+    } else {
+        Some(PathBuf::from(format!(
+            "/Users/{}/.config/rclone",
+            whoami::username()
+        )))
+    }
 }
 
 pub fn app_config_path() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("rclone_app"));
-    #[cfg(not(target_os = "windows"))]
-    Some(PathBuf::from(format!(
-        "/home/{}/.config/rclone_app",
-        whoami::username()
-    )))
+    if cfg!(target_os = "linux") {
+        Some(PathBuf::from(format!(
+            "/home/{}/.config/rclone_app",
+            whoami::username()
+        )))
+    } else if cfg!(target_os = "macos") {
+        Some(PathBuf::from(format!(
+            "/Users/{}/.config/rclone_app",
+            whoami::username()
+        )))
+    } else {
+        None
+    }
 }
 
 pub fn add_google_drive_storage(name: String) {
