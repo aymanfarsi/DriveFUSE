@@ -53,7 +53,7 @@ impl MountingStorage {
             //false
             path.read_dir()
                 .map(|mut i| i.next().is_some())
-                .unwrap_or(true)
+                .unwrap_or(false)
         }
     }
 
@@ -322,8 +322,8 @@ impl MountingStorage {
             .arg(format!("/home/{}/drive_af/{}", username, name))
             .arg("--vfs-cache-mode")
             .arg("full")
-            .arg("--dir-cache-time")
-            .arg("1000h")
+            //.arg("--dir-cache-time")
+            //.arg("1000h")
             .arg("--allow-other");
 
         let process = process.spawn();

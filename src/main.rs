@@ -13,8 +13,9 @@ use tokio::runtime::Runtime;
 use tracing_subscriber::fmt::time::ChronoLocal;
 
 #[cfg(target_os = "windows")]
-use {directories::UserDirs, std::os::windows::process::CommandExt, winapi::um::winbase};
+use {std::os::windows::process::CommandExt, winapi::um::winbase};
 
+use directories::UserDirs;
 use std::fs::create_dir_all;
 
 fn main() {
@@ -31,9 +32,9 @@ fn main() {
         #[cfg(target_family = "unix")]
         {
             let username = whoami::username();
-            format!("/home/{}/Documents/drive_af/logs", username.clone());
+            format!("/home/{}/Documents/drive_af/logs", username.clone())
         }
-        panic!("Unsupported platform!")
+        // panic!("Unsupported platform!")
     };
 
     if !Path::new(&dir).exists() {
@@ -71,7 +72,7 @@ fn main() {
 
     if platform == "windows" || platform == "linux" {
         #[cfg(target_os = "linux")]
-        create_dir_all(format!("/home/{}/drive_af", username)).unwrap();
+        create_dir_all(format!("/home/{}/drive_af", whoami::username())).unwrap();
 
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
