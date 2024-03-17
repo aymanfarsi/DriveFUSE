@@ -19,16 +19,20 @@ use directories::UserDirs;
 use std::fs::create_dir_all;
 
 fn main() {
-    let dir = if cfg!(target_os = "windows") {
-        UserDirs::new()
+    let mut dir = String::new();
+    #[cfg(target_os = "windows")]
+    {
+        dir = UserDirs::new()
             .unwrap()
             .document_dir()
             .unwrap()
             .to_str()
             .unwrap()
-            .to_string()
-            + "/drive_af/logs"
-    } else {
+            .to_owned()
+            + "/drive_af/logs";
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
         #[cfg(target_os = "linux")]
         {
             let username = whoami::username();
