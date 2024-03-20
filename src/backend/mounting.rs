@@ -312,7 +312,7 @@ impl MountingStorage {
             .unwrap()
             .document_dir()
             .unwrap()
-            .join("rclone_app")
+            .join("drive_af")
             .to_str()
             .unwrap()
             .to_owned();
@@ -328,7 +328,7 @@ impl MountingStorage {
             // .arg("--dir-cache-time")
             // .arg("1000h")
             .arg("--log-level")
-            .arg("NOTICE")
+            .arg("ERROR")
             .arg("--log-file")
             .arg(format!("{}/rclone-{}.log", doc_app, name));
         // .arg("--network-mode");

@@ -19,6 +19,7 @@ use directories::UserDirs;
 use std::fs::create_dir_all;
 
 fn main() {
+    #[allow(unused_assignments)]
     let mut dir = String::new();
     #[cfg(target_os = "windows")]
     {
