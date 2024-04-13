@@ -20,8 +20,11 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
     })
     .unwrap();
 
+    #[cfg(target_os = "windows")]
+    tray.inner_mut().add_separator().unwrap();
+
     let icon_tx = tx.clone();
-    tray.add_menu_item("Red", move || {
+    tray.add_menu_item("DriveAF", move || {
         icon_tx.send(Message::Icon).unwrap();
     })
     .unwrap();
