@@ -95,6 +95,11 @@ impl eframe::App for RcloneApp {
                                 ctx_clone_tray.request_repaint();
                                 break;
                             }
+                            Ok(Message::Icon) => {
+                                tray.set_icon(IconSource::Resource("app-icon")).unwrap();
+                                tx_egui_clone_tray.send(Message::Icon).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
                             Ok(Message::Red) => {
                                 tray.set_icon(IconSource::Resource("red-icon")).unwrap();
                                 tx_egui_clone_tray.send(Message::Red).unwrap();
@@ -176,6 +181,9 @@ impl eframe::App for RcloneApp {
                     // ! unmount all drives
                     self.is_close_requested = true;
                     frame.close();
+                }
+                Message::Icon => {
+                    frame.set_window_title("DriveAF");
                 }
                 Message::Red => {
                     frame.set_window_title("RcloneApp - Red");

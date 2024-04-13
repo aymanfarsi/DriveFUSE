@@ -20,6 +20,12 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
     })
     .unwrap();
 
+    let icon_tx = tx.clone();
+    tray.add_menu_item("Red", move || {
+        icon_tx.send(Message::Icon).unwrap();
+    })
+    .unwrap();
+
     let red_tx = tx.clone();
     tray.add_menu_item("Red", move || {
         red_tx.send(Message::Red).unwrap();

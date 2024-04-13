@@ -20,6 +20,7 @@ impl Tab {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Message {
     Quit,
+    Icon,
     Green,
     Red,
     ShowApp,

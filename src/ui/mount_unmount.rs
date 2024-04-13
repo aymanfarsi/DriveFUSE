@@ -7,14 +7,14 @@ use crate::RcloneApp;
 
 pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
     CentralPanel::default().show(ctx, |ui| {
-        ui.heading(
-            RichText::new(format!(
-                "You ve got {} storages ^_^",
-                app.rclone.storages.len()
-            ))
-            .size(21.0),
-        );
-        ui.add_space(8.0);
+//        ui.heading(
+//            RichText::new(format!(
+//                "You ve got {} storages ^_^",
+//                app.rclone.storages.len()
+//            ))
+//            .size(21.0),
+//        );
+//        ui.add_space(8.0);
         ScrollArea::new([false, true])
             .auto_shrink([false, true])
             .show(ui, |ui| {
