@@ -19,14 +19,18 @@ pub fn render_top_panel(ctx: &Context, app: &mut RcloneApp) {
                     );
                     label.context_menu(|ui| {
                         if ui.button("Mount all").clicked() {
+                            app.mounted_storages.unmount_all();
                             app.mounted_storages.mount_all(app.rclone.storages.clone());
+                            ui.close_menu();
                         }
                         if ui.button("Unmount all").clicked() {
                             app.mounted_storages.unmount_all();
+                            ui.close_menu();
                         }
                         ui.separator();
                         if ui.button("Quit").clicked() {
                             app.tx_egui.send(Message::Quit).unwrap();
+                            ui.close_menu();
                         }
                     });
                     ui.add_space(3.);
