@@ -101,7 +101,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                         //     app.new_storage_drive_letter =
                                         //         possible_drives.first().unwrap().to_string();
                                         // }
-                                        let is_already_mounted =
+                                        let is_drive_letter_mounted =
                                             app.mounted_storages.is_drive_letter_mounted(
                                                 app.new_storage_drive_letter
                                                     .chars()
@@ -109,16 +109,14 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                                     .unwrap(),
                                             );
                                         if app.new_storage_drive_letter != "N/A"
-                                            && !is_already_mounted
+                                            && !is_drive_letter_mounted
                                         {
                                             app.mounted_storages.mount(
                                                 app.new_storage_drive_letter.clone(),
                                                 storage.name.clone(),
                                                 false,
                                             );
-                                        } else if app.new_storage_drive_letter == "N/A"
-                                            && !is_already_mounted
-                                        {
+                                        } else {
                                             let possible_drives = available_drives();
                                             app.new_storage_drive_letter =
                                                 possible_drives.first().unwrap().to_string();
