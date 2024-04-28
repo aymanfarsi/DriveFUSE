@@ -77,7 +77,7 @@ impl MountingStorage {
             let mut available_drives = available_drives();
             for drive in drives {
                 let next_drive = available_drives.first().unwrap().to_string();
-                let id = Self::mount_windows(drive.name.clone(), next_drive.clone());
+                let id = Self::mount_windows(drive.name.clone(), next_drive.clone(), false);
                 match id {
                     Some(id) => {
                         available_drives.remove(0);
@@ -193,10 +193,10 @@ impl MountingStorage {
         }
     }
 
-    pub fn mount(&mut self, driver_letter: String, name: String) {
+    pub fn mount(&mut self, driver_letter: String, name: String, show_terminal: bool) {
         #[cfg(target_os = "windows")]
         {
-            let id = Self::mount_windows(name.clone(), driver_letter.clone());
+            let id = Self::mount_windows(name.clone(), driver_letter.clone(), show_terminal);
             match id {
                 Some(id) => {
                     println!("Mounted {} to {}", name, driver_letter);
@@ -307,7 +307,7 @@ impl MountingStorage {
     }
 
     #[cfg(target_os = "windows")]
-    fn mount_windows(name: String, driver_letter: String) -> Option<u32> {
+    fn mount_windows(name: String, driver_letter: String, show_terminal: bool) -> Option<u32> {
         let doc_app = UserDirs::new()
             .unwrap()
             .document_dir()
@@ -323,6 +323,8 @@ impl MountingStorage {
             .arg(format!("{}:", driver_letter))
             .arg("--vfs-cache-mode")
             .arg("full")
+            // .arg("--vfs-cache-max-age")
+            // .arg("0s")
             .arg("--volname")
             .arg(name.clone())
             // .arg("--dir-cache-time")
@@ -339,7 +341,11 @@ impl MountingStorage {
         // .arg("--buffer-size")
         // .arg("64M")
 
-        process.creation_flags(winbase::CREATE_NO_WINDOW);
+        if show_terminal {
+            process.creation_flags(winbase::CREATE_NEW_CONSOLE);
+        } else {
+            process.creation_flags(winbase::CREATE_NO_WINDOW);
+        }
         let process = process.spawn();
 
         match process {
