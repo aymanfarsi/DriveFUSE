@@ -32,7 +32,11 @@ impl MountingStorage {
     }
 
     pub fn is_drive_letter_mounted(&self, drive: char) -> bool {
-        self.mounted.values().any(|&v| v == drive) || available_drives().contains(&drive)
+        #[cfg(target_os = "linux")]
+        let is_avail = false;
+        #[cfg(target_os = "windows")]
+        let is_avail = available_drives().contains(&drive);
+        self.mounted.values().any(|&v| v == drive) || is_avail
     }
 
     pub fn is_mounted(&self, name: String) -> bool {
