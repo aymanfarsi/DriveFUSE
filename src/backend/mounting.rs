@@ -166,15 +166,18 @@ impl MountingStorage {
         }
     }
 
-    pub fn unmount_all(&self) -> bool {
+    pub fn unmount_all(&mut self) -> bool {
         #[cfg(target_os = "windows")]
         {
             let mut success = true;
-            for (driver_letter, process_id) in self.drives.iter() {
+            for (driver_letter, process_id) in self.drives.clone().iter() {
                 let success_unmount = Self::unmount_windows(*process_id);
                 if !success_unmount {
                     eprintln!("Failed to unmount {}", driver_letter);
                     success = false;
+                } else {
+                    self.mounted.remove(driver_letter);
+                    self.drives.remove(driver_letter);
                 }
             }
             success

@@ -51,6 +51,7 @@ impl Rclone {
         let file = OpenOptions::new()
             .write(true)
             .create(true)
+            .truncate(true)
             .read(true)
             .open(rclone_config_path)
             .unwrap();
@@ -114,15 +115,23 @@ impl Rclone {
                     },
                 });
             } else if line.starts_with('[') {
-                drive_name = line.get(1..line.len() - 1).unwrap().to_owned();
+                line.get(1..line.len() - 1)
+                    .unwrap()
+                    .clone_into(&mut drive_name);
             } else {
                 match line.get(..2) {
-                    Some("ty") => {
-                        drive_type = line.split('=').last().unwrap().replace(' ', "").to_owned()
-                    }
-                    Some("sc") => {
-                        drive_scope = line.split('=').last().unwrap().replace(' ', "").to_owned()
-                    }
+                    Some("ty") => line
+                        .split('=')
+                        .last()
+                        .unwrap()
+                        .replace(' ', "")
+                        .clone_into(&mut drive_type),
+                    Some("sc") => line
+                        .split('=')
+                        .last()
+                        .unwrap()
+                        .replace(' ', "")
+                        .clone_into(&mut drive_scope),
                     Some("to") => {
                         let input = line.split('=').last().unwrap();
                         let json: Value =
