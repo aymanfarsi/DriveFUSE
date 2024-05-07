@@ -1,0 +1,7 @@
+05/05/2024T15:27:47  INFO drive_af: src/main.rs:71: Machine ID is: b0794459f5b44725b6af9674827baf7c
+05/05/2024T15:29:00  INFO drive_af: src/main.rs:71: Machine ID is: b0794459f5b44725b6af9674827baf7c
+05/05/2024T15:29:00  INFO winit::platform_impl::platform::x11::window: /home/evildave/.cargo/registry/src/index.crates.io-6f17d22bba15001f/winit-0.28.7/src/platform_impl/linux/x11/window.rs:156: Guessed window scale factor: 1    
+05/05/2024T15:31:13  INFO drive_af: src/main.rs:71: Machine ID is: b0794459f5b44725b6af9674827baf7c
+05/05/2024T15:31:13  INFO winit::platform_impl::platform::x11::window: /home/evildave/.cargo/registry/src/index.crates.io-6f17d22bba15001f/winit-0.28.7/src/platform_impl/linux/x11/window.rs:156: Guessed window scale factor: 1    
+05/05/2024T15:32:01  INFO drive_af: src/main.rs:71: Machine ID is: b0794459f5b44725b6af9674827baf7c
+05/05/2024T15:32:02  INFO winit::platform_impl::platform::x11::window: /home/evildave/.cargo/registry/src/index.crates.io-6f17d22bba15001f/winit-0.28.7/src/platform_impl/linux/x11/window.rs:156: Guessed window scale factor: 1    
