@@ -133,9 +133,17 @@ pub fn available_drives() -> Vec<char> {
 }
 
 pub fn rclone_config_path() -> Option<PathBuf> {
-    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    #[cfg(target_os = "windows")]
     {
         let path = BaseDirs::new().map(|base_dirs| base_dirs.config_dir().join("rclone"));
+        path
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let path = Some(PathBuf::from(format!(
+            "/home/{}/.config/rclone",
+            whoami::username()
+        )));
         path
     }
     #[cfg(target_os = "macos")]

@@ -51,7 +51,7 @@ impl Rclone {
         let file = OpenOptions::new()
             .write(true)
             .create(true)
-            .truncate(true)
+            .truncate(false)
             .read(true)
             .open(rclone_config_path)
             .unwrap();
@@ -228,6 +228,40 @@ impl Rclone {
 
             if let Some(path) = res {
                 Self::write_config(lines, Some(path.path().to_str().unwrap().to_owned()));
+            }
+        });
+    }
+
+    pub fn restore_backup(&self) {
+        tokio::spawn(async move {
+            let res = rfd::AsyncFileDialog::new()
+                .add_filter("rclone config", &["conf"])
+                .set_directory(app_config_path().unwrap())
+                .pick_file()
+                .await;
+
+            if let Some(path) = res {
+                let file = OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .truncate(false)
+                    .open(rclone_config_path().unwrap().join("rclone.conf"))
+                    .unwrap();
+                let mut buffered = BufReader::new(file);
+
+                let backup_file = OpenOptions::new().read(true).open(path.path()).unwrap();
+                let backup_buffered = BufReader::new(backup_file);
+
+                for line in backup_buffered.lines() {
+                    buffered
+                        .get_mut()
+                        .write_all(line.unwrap().as_bytes())
+                        .expect("couldnt write to file");
+                    buffered
+                        .get_mut()
+                        .write_all("\n".as_bytes())
+                        .expect("couldnt write to file");
+                }
             }
         });
     }
