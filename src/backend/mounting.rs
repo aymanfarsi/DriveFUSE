@@ -200,10 +200,10 @@ impl MountingStorage {
         }
     }
 
-    pub fn mount(&mut self, driver_letter: String, name: String, show_terminal: bool) {
+    pub fn mount(&mut self, driver_letter: String, name: String, _show_terminal: bool) {
         #[cfg(target_os = "windows")]
         {
-            let id = Self::mount_windows(name.clone(), driver_letter.clone(), show_terminal);
+            let id = Self::mount_windows(name.clone(), driver_letter.clone(), _show_terminal);
             match id {
                 Some(id) => {
                     println!("Mounted {} to {}", name, driver_letter);
