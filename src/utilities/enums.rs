@@ -17,7 +17,7 @@ impl Tab {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Message {
     Quit,
     Icon,
@@ -26,6 +26,14 @@ pub enum Message {
     ShowApp,
     HideApp,
     RcloneConfigUpdated,
+    // MountStorage(String),
+    // UnmountStorage(String),
+    MountAll,
+    UnmountAll,
+    EnableAutoMount,
+    DisableAutoMount,
+    // EnableAutoStart,
+    // DisableAutoStart,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

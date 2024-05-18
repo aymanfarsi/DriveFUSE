@@ -55,27 +55,26 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                             ui.label(storage.name.to_string());
                             ui.label(drive_type);
                             ui.label(status_text);
+                            let letter = app
+                                .app_config
+                                .get_drive_letter(&storage.name.clone())
+                                .unwrap_or("N/A".to_string());
                             #[cfg(target_os = "windows")]
                             if is_mounted {
-                                let letter = app.app_config.get_drive_letter(&storage.name.clone());
-                                ui.label(letter.unwrap_or("N/A".to_string()));
+                                ui.label(letter.clone());
                             } else {
                                 ComboBox::from_id_source(format!("drive_letter_{}", storage.name))
-                                    .selected_text(app.new_storage_drive_letter.clone())
+                                    .selected_text(letter.clone())
                                     .width(70.)
                                     .show_ui(ui, |ui| {
                                         for drive in &possible_drives {
-                                            let current_value = &mut app.new_storage_drive_letter;
                                             let selected_value = drive.to_string();
                                             let text = drive.to_string();
 
-                                            let response = ui.selectable_label(
-                                                *current_value == selected_value,
-                                                text,
-                                            );
+                                            let response =
+                                                ui.selectable_label(selected_value == letter, text);
 
                                             if response.clicked() {
-                                                *current_value = selected_value;
                                                 app.app_config.set_drives_letters(
                                                     storage.name.clone(),
                                                     *drive,
@@ -104,27 +103,29 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                         // }
                                         let is_drive_letter_mounted =
                                             app.mounted_storages.is_drive_letter_mounted(
-                                                app.new_storage_drive_letter
-                                                    .chars()
-                                                    .next()
-                                                    .unwrap(),
+                                                letter.clone().chars().next().unwrap(),
                                             );
-                                        if app.new_storage_drive_letter != "N/A"
+                                        if letter != "N/A"
                                             && !is_drive_letter_mounted
                                         {
                                             app.mounted_storages.mount(
-                                                app.new_storage_drive_letter.clone(),
+                                                letter.clone(),
                                                 storage.name.clone(),
                                                 false,
+                                                &mut app.app_config,
                                             );
                                         } else {
                                             let possible_drives = available_drives();
-                                            app.new_storage_drive_letter =
-                                                possible_drives.first().unwrap().to_string();
+                                            let first_drive = possible_drives.first().unwrap();
+                                            app.app_config.set_drives_letters(
+                                                storage.name.clone(),
+                                                *first_drive,
+                                            );
                                             app.mounted_storages.mount(
-                                                app.new_storage_drive_letter.clone(),
+                                                first_drive.to_string(),
                                                 storage.name.clone(),
                                                 false,
+                                                &mut app.app_config,
                                             );
                                         }
                                     }
@@ -150,18 +151,16 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                     } else {
                                         let is_already_mounted =
                                             app.mounted_storages.is_drive_letter_mounted(
-                                                app.new_storage_drive_letter
-                                                    .chars()
-                                                    .next()
-                                                    .unwrap(),
+                                                letter.clone().chars().next().unwrap(),
                                             );
-                                        if app.new_storage_drive_letter != "N/A"
+                                        if letter != "N/A"
                                             && !is_already_mounted
                                         {
                                             app.mounted_storages.mount(
-                                                app.new_storage_drive_letter.clone(),
+                                                letter,
                                                 storage.name.clone(),
                                                 true,
+                                                &mut app.app_config,
                                             );
                                         }
                                     }

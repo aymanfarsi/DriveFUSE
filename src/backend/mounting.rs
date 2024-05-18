@@ -9,7 +9,7 @@ use {
 #[cfg(not(target_os = "windows"))]
 use {std::fs::DirBuilder, std::path::Path};
 
-use super::rclone::Storage;
+use super::{app_config::AppConfig, rclone::Storage};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MountingStorage {
@@ -200,7 +200,13 @@ impl MountingStorage {
         }
     }
 
-    pub fn mount(&mut self, driver_letter: String, name: String, _show_terminal: bool) {
+    pub fn mount(
+        &mut self,
+        driver_letter: String,
+        name: String,
+        _show_terminal: bool,
+        app: &mut AppConfig,
+    ) {
         #[cfg(target_os = "windows")]
         {
             let id = Self::mount_windows(name.clone(), driver_letter.clone(), _show_terminal);
@@ -209,7 +215,8 @@ impl MountingStorage {
                     println!("Mounted {} to {}", name, driver_letter);
                     self.drives.insert(name.clone(), id);
                     self.mounted
-                        .insert(name, driver_letter.chars().next().unwrap());
+                        .insert(name.clone(), driver_letter.chars().next().unwrap());
+                    app.set_drives_letters(name, driver_letter.chars().next().unwrap());
                 }
                 None => {
                     eprintln!("Failed to mount {} to {}", name, driver_letter);

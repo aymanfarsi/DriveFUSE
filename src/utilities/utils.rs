@@ -151,7 +151,7 @@ pub fn rclone_config_path() -> Option<PathBuf> {
 
 pub fn app_config_path() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
-    return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("rclone_app"));
+    return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("drive_af"));
     #[cfg(not(target_os = "windows"))]
     if cfg!(target_os = "linux") {
         Some(PathBuf::from(format!(

@@ -26,11 +26,10 @@ pub struct RcloneApp {
 
     pub current_tab: Tab,
 
-    pub selected_storage: Option<String>,
+    // pub selected_storage: Option<String>,
     pub new_storage_name: String,
-    pub new_storage_drive_letter: String,
-    pub edit_storage_name: String,
-
+    // pub new_storage_drive_letter: String,
+    // pub edit_storage_name: String,
     is_first_run: bool,
     is_close_requested: bool,
 
@@ -58,11 +57,10 @@ impl RcloneApp {
 
             current_tab: Tab::MountUnmount,
 
-            selected_storage: None,
+            // selected_storage: None,
             new_storage_name: String::new(),
-            new_storage_drive_letter: String::from("N/A"),
-            edit_storage_name: String::new(),
-
+            // new_storage_drive_letter: String::from("N/A"),
+            // edit_storage_name: String::new(),
             is_first_run: true,
             is_close_requested: false,
 
@@ -121,7 +119,44 @@ impl eframe::App for RcloneApp {
                             Err(_) => {
                                 eprintln!("Error receiving message from tray menu");
                             }
-                            Ok(Message::RcloneConfigUpdated) => {}
+                            Ok(Message::RcloneConfigUpdated) => {
+                                println!("Rclone config updated");
+                            }
+                            Ok(Message::MountAll) => {
+                                tx_egui_clone_tray.send(Message::MountAll).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::UnmountAll) => {
+                                tx_egui_clone_tray.send(Message::UnmountAll).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::EnableAutoMount) => {
+                                tx_egui_clone_tray.send(Message::EnableAutoMount).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::DisableAutoMount) => {
+                                tx_egui_clone_tray.send(Message::DisableAutoMount).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            } // Ok(Message::EnableAutoStart) => {
+                              //     tx_egui_clone_tray.send(Message::EnableAutoStart).unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::DisableAutoStart) => {
+                              //     tx_egui_clone_tray.send(Message::DisableAutoStart).unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::MountStorage(name)) => {
+                              //     tx_egui_clone_tray
+                              //         .send(Message::MountStorage(name))
+                              //         .unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::UnmountStorage(name)) => {
+                              //     tx_egui_clone_tray
+                              //         .send(Message::UnmountStorage(name))
+                              //         .unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
                         }
                     }
                 });
@@ -200,6 +235,43 @@ impl eframe::App for RcloneApp {
                 Message::RcloneConfigUpdated => {
                     self.rclone = Rclone::init();
                 }
+                Message::MountAll => {
+                    self.mounted_storages
+                        .mount_all(self.rclone.storages.clone());
+                }
+                Message::UnmountAll => {
+                    self.mounted_storages.unmount_all();
+                }
+                Message::EnableAutoMount => {
+                    self.app_config.set_is_auto_mount(true);
+                }
+                Message::DisableAutoMount => {
+                    self.app_config.set_is_auto_mount(false);
+                } // Message::EnableAutoStart => {
+                  //     enable_auto_start_app();
+                  // }
+                  // Message::DisableAutoStart => {
+                  //     disable_auto_start_app();
+                  // }
+                  // Message::MountStorage(name) => {
+                  //     let mut letter = self
+                  //         .app_config
+                  //         .get_drive_letter(&name)
+                  //         .unwrap_or("N/A".to_string());
+                  //     if letter == "N/A" {
+                  //         let possible = available_drives();
+                  //         letter = possible.first().unwrap().to_string();
+                  //     }
+                  //     self.mounted_storages.mount(
+                  //         letter.clone(),
+                  //         name,
+                  //         false,
+                  //         &mut self.app_config,
+                  //     );
+                  // }
+                  // Message::UnmountStorage(name) => {
+                  //     self.mounted_storages.unmount(name);
+                  // }
             }
         }
 
