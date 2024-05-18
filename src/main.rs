@@ -13,39 +13,31 @@ use tokio::runtime::Runtime;
 use tracing_subscriber::fmt::time::ChronoLocal;
 
 #[cfg(target_os = "windows")]
-use {std::os::windows::process::CommandExt, winapi::um::winbase};
+use {directories::UserDirs, std::os::windows::process::CommandExt, winapi::um::winbase};
 
-use directories::UserDirs;
 use std::fs::create_dir_all;
 
 fn main() {
-    #[allow(unused_assignments)]
-    let mut dir = String::new();
     #[cfg(target_os = "windows")]
-    {
-        dir = UserDirs::new()
-            .unwrap()
-            .document_dir()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_owned()
-            + "/drive_af/logs";
-    }
+    let dir = UserDirs::new()
+        .unwrap()
+        .document_dir()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_owned()
+        + "/drive_af/logs";
+
     #[cfg(not(target_os = "windows"))]
-    {
-        #[cfg(target_os = "linux")]
-        {
-            let username = whoami::username();
-            format!("/home/{}/Documents/drive_af/logs", username.clone())
-        }
-        #[cfg(target_os = "macos")]
-        {
-            let username = whoami::username();
-            format!("/Users/{}/Documents/drive_af/logs", username.clone())
-        }
-        // panic!("Unsupported platform!")
-    };
+    let dir = format!(
+        "/{}/{}/Documents/drive_af/logs",
+        if cfg!(target_os = "linux") {
+            "home"
+        } else {
+            "Users"
+        },
+        whoami::username()
+    );
 
     if !Path::new(&dir).exists() {
         create_dir_all(&dir).unwrap();

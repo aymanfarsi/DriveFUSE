@@ -5,9 +5,8 @@ use std::{
 };
 
 use auto_launch::AutoLaunchBuilder;
-use directories::BaseDirs;
 #[cfg(target_os = "windows")]
-use directories::UserDirs;
+use directories::{BaseDirs, UserDirs};
 
 #[cfg(target_os = "windows")]
 use {std::os::windows::process::CommandExt, winapi::um::winbase, windows::Win32};
@@ -136,21 +135,17 @@ pub fn rclone_config_path() -> Option<PathBuf> {
         let path = BaseDirs::new().map(|base_dirs| base_dirs.config_dir().join("rclone"));
         path
     }
-    #[cfg(target_os = "linux")]
+    #[cfg(not(target_os = "windows"))]
     {
-        let path = Some(PathBuf::from(format!(
-            "/home/{}/.config/rclone",
+        Some(PathBuf::from(format!(
+            "/{}/{}/.config/rclone",
+            if cfg!(target_os = "linux") {
+                "home"
+            } else {
+                "Users"
+            },
             whoami::username()
-        )));
-        path
-    }
-    #[cfg(target_os = "macos")]
-    {
-        let path = Some(PathBuf::from(format!(
-            "/Users/{}/.config/rclone",
-            whoami::username()
-        )));
-        path
+        )))
     }
 }
 
