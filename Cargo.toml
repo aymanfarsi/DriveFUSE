@@ -1,6 +1,6 @@
 [package]
 name = "drive_af"
-version = "0.5.3"
+version = "0.7.1"
 authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
 rust-version = "1.70"
@@ -11,7 +11,6 @@ description = "A cross-platform cloud storage mounter."
 name = "DriveAF"
 identifier = "io.github.aymanfarsi.drive_af"
 icon = ["DriveAF.ico", "icon-green.ico", "icon-red.ico"]
-version = "1.0.0"
 resources = ["assets"]
 
 [dependencies]
