@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [[ $(uname -s) == *NT* ]]; then
+    # Windows specific code
+    echo "Running on Windows"
+else
+    # Linux/Mac specific code
+    echo "Running on Linux/Mac"
+fi
+
+cargo build --release
+
+# echo "Bundle the app"
+# cargo bundle --release
