@@ -10,6 +10,7 @@ use std::{
 use drive_af::RcloneApp;
 use eframe::IconData;
 use tokio::runtime::Runtime;
+use tracing::level_filters::LevelFilter;
 use tracing_subscriber::fmt::time::ChronoLocal;
 
 #[cfg(target_os = "windows")]
@@ -57,6 +58,7 @@ fn main() {
         .with_timer(timer)
         .with_writer(std::io::stderr)
         .with_writer(non_blocking)
+        .with_max_level(LevelFilter::WARN)
         .init();
 
     match machine_uid::get() {

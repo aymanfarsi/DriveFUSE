@@ -117,10 +117,10 @@ impl eframe::App for RcloneApp {
                                 ctx_clone_tray.request_repaint();
                             }
                             Err(_) => {
-                                eprintln!("Error receiving message from tray menu");
+                                tracing::error!("Error receiving message from tray menu");
                             }
                             Ok(Message::RcloneConfigUpdated) => {
-                                println!("Rclone config updated");
+                                tracing::info!("Rclone config updated");
                             }
                             Ok(Message::MountAll) => {
                                 tx_egui_clone_tray.send(Message::MountAll).unwrap();
@@ -192,11 +192,11 @@ impl eframe::App for RcloneApp {
                                 }
                             }
                             Err(_) => {
-                                eprintln!("Error receiving message from rclone config watcher");
+                                tracing::error!("Error watching rclone config file");
                             }
                         },
                         None => {
-                            eprintln!("Channel closed");
+                            tracing::error!("Error receiving message from rclone config watcher. Channel closed");
                         }
                     }
                 }
@@ -291,7 +291,7 @@ impl eframe::App for RcloneApp {
         match self.mounted_storages.unmount_all() {
             true => true,
             false => {
-                eprintln!("Failed to unmount all drives");
+                tracing::error!("Failed to unmount all drives");
                 false
             }
         }
@@ -300,7 +300,7 @@ impl eframe::App for RcloneApp {
             true => match self.mounted_storages.unmount_all() {
                 true => true,
                 false => {
-                    eprintln!("Failed to unmount all drives");
+                    tracing::error!("Failed to unmount all drives");
                     self.is_close_requested = false;
                     false
                 }
@@ -315,7 +315,7 @@ impl eframe::App for RcloneApp {
         match self.mounted_storages.unmount_all() {
             true => true,
             false => {
-                eprintln!("Failed to unmount all drives");
+                tracing::error!("Failed to unmount all drives");
                 false
             }
         }

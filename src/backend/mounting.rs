@@ -85,13 +85,13 @@ impl MountingStorage {
                 match id {
                     Some(id) => {
                         available_drives.remove(0);
-                        println!("Mounted {} to {}", drive.name, next_drive);
+                        tracing::info!("Mounted {} to {}", drive.name, next_drive);
                         self.drives.insert(drive.name.clone(), id);
                         self.mounted
                             .insert(drive.name, next_drive.chars().next().unwrap());
                     }
                     None => {
-                        eprintln!("Failed to mount {} to {}", drive.name, next_drive);
+                        tracing::error!("Failed to mount {} to {}", drive.name, next_drive);
                         success = false;
                     }
                 }
@@ -143,7 +143,7 @@ impl MountingStorage {
 
                 match process {
                     Ok(process) => {
-                        println!(
+                        tracing::info!(
                             "Mounted {} to {}/{}/drive_af/{}",
                             root,
                             username.clone(),
@@ -153,7 +153,7 @@ impl MountingStorage {
                         self.drives.insert(drive.name.clone(), process.id());
                     }
                     Err(e) => {
-                        eprintln!(
+                        tracing::error!(
                             "Error mounting {} at {}/{}/drive_af/{}: due to {}",
                             root,
                             username.clone(),
@@ -177,7 +177,7 @@ impl MountingStorage {
             for (driver_letter, process_id) in self.drives.clone().iter() {
                 let success_unmount = Self::unmount_windows(*process_id);
                 if !success_unmount {
-                    eprintln!("Failed to unmount {}", driver_letter);
+                    tracing::error!("Failed to unmount {}", driver_letter);
                     success = false;
                 } else {
                     self.mounted.remove(driver_letter);
@@ -192,7 +192,7 @@ impl MountingStorage {
             for (name, process_id) in self.drives.iter() {
                 let success_unmount = Self::unmount_unix(*process_id, name.to_string());
                 if !success_unmount {
-                    eprintln!("Error unmounting {}", name);
+                    tracing::error!("Error unmounting {}", name);
                     success = false;
                 }
             }
@@ -212,30 +212,29 @@ impl MountingStorage {
             let id = Self::mount_windows(name.clone(), driver_letter.clone(), _show_terminal);
             match id {
                 Some(id) => {
-                    println!("Mounted {} to {}", name, driver_letter);
+                    tracing::info!("Mounted {} to {}", name, driver_letter);
                     self.drives.insert(name.clone(), id);
                     self.mounted
                         .insert(name.clone(), driver_letter.chars().next().unwrap());
                     app.set_drives_letters(name, driver_letter.chars().next().unwrap());
                 }
                 None => {
-                    eprintln!("Failed to mount {} to {}", name, driver_letter);
+                    tracing::error!("Failed to mount {} to {}", name, driver_letter);
                 }
             }
         }
 
         #[cfg(target_os = "linux")]
         {
-            println!("{}", driver_letter);
             let username = whoami::username();
             let id = Self::mount_unix(name.clone());
             match id {
                 Some(id) => {
-                    println!("Mounted {} to /home/{}/drive_af/{}", username, name, name);
+                    tracing::info!("Mounted {} to /home/{}/drive_af/{}", username, name, name);
                     self.drives.insert(name.clone(), id);
                 }
                 None => {
-                    eprintln!(
+                    tracing::error!(
                         "Failed to mount {} to /home/{}/drive_af/{}",
                         username, name, name
                     );
@@ -245,16 +244,15 @@ impl MountingStorage {
 
         #[cfg(target_os = "macos")]
         {
-            println!("{}", driver_letter);
             let username = whoami::username();
             let id = Self::mount_unix(name.clone());
             match id {
                 Some(id) => {
-                    println!("Mounted {} to /Users/{}/drive_af/{}", username, name, name);
+                    tracing::info!("Mounted {} to /Users/{}/drive_af/{}", username, name, name);
                     self.drives.insert(name.clone(), id);
                 }
                 None => {
-                    eprintln!(
+                    tracing::error!(
                         "Failed to mount {} to /Users/{}/drive_af/{}",
                         username, name, name
                     );
@@ -272,7 +270,7 @@ impl MountingStorage {
                 self.drives.remove(&driver_letter);
                 self.mounted.remove(&driver_letter);
             } else {
-                eprintln!("Failed to unmount {}", driver_letter);
+                tracing::error!("Failed to unmount {}", driver_letter);
             }
         }
         #[cfg(target_os = "linux")]
@@ -293,7 +291,7 @@ impl MountingStorage {
                     self.drives.remove(&driver_letter);
                 }
             } else {
-                eprintln!("Failed to unmount {}", driver_letter);
+                tracing::error!("Failed to unmount {}", driver_letter);
             }
         }
 
@@ -315,7 +313,7 @@ impl MountingStorage {
                     self.drives.remove(&driver_letter);
                 }
             } else {
-                eprintln!("Failed to unmount {}", driver_letter);
+                tracing::error!("Failed to unmount {}", driver_letter);
             }
         }
     }
@@ -365,7 +363,7 @@ impl MountingStorage {
         match process {
             Ok(process) => Some(process.id()),
             Err(e) => {
-                eprintln!("Error mounting {} at {}: due to {}", name, driver_letter, e);
+                tracing::error!("Error mounting {} at {}: due to {}", name, driver_letter, e);
                 None
             }
         }
@@ -410,7 +408,7 @@ impl MountingStorage {
         match process {
             Ok(process) => Some(process.id()),
             Err(e) => {
-                eprintln!(
+                tracing::error!(
                     "Error mounting {} at /home/{}/drive_af/{}: due to {}",
                     username, name, name, e
                 );
@@ -444,7 +442,7 @@ impl MountingStorage {
         match process {
             Ok(process) => Some(process.id()),
             Err(e) => {
-                eprintln!(
+                tracing::error!(
                     "Error mounting {} at /Users/{}/drive_af/{}: due to {}",
                     username, name, name, e
                 );
@@ -489,7 +487,7 @@ impl MountingStorage {
         match process {
             Ok(code) => code.code() == Some(0),
             Err(err) => {
-                eprintln!("Error unmounting {} due to {}", name, err);
+                tracing::error!("Error unmounting {} due to {}", name, err);
                 false
             }
         }

@@ -22,10 +22,10 @@ pub fn check_if_mounted(_name: String) {
     match process {
         Ok(result) => {
             let output = String::from_utf8_lossy(&result.stdout);
-            println!("{}", output);
+            tracing::info!("{}", output);
         }
         Err(err) => {
-            println!("{}", err);
+            tracing::error!("{}", err);
         }
     }
 }
@@ -45,7 +45,7 @@ pub fn get_info(name: String) -> Result<String, String> {
             Ok(output.to_string())
         }
         Err(err) => {
-            eprintln!("Error while getting storage {} about info", name);
+            tracing::error!("Error while getting storage {} about info", name);
             Err(err.to_string())
         }
     }
