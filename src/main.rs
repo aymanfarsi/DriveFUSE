@@ -26,11 +26,11 @@ fn main() {
         .to_str()
         .unwrap()
         .to_owned()
-        + "/drive_af/logs";
+        + "/drive_af";
 
     #[cfg(not(target_os = "windows"))]
     let dir = format!(
-        "/{}/{}/Documents/drive_af/logs",
+        "/{}/{}/Documents/drive_af",
         if cfg!(target_os = "linux") {
             "home"
         } else {
@@ -43,7 +43,7 @@ fn main() {
         create_dir_all(&dir).unwrap();
     }
 
-    let file_appender = tracing_appender::rolling::never(dir, "drive_af_logs.log");
+    let file_appender = tracing_appender::rolling::never(dir, "drive_af.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
     let timer = ChronoLocal::new("%m/%d/%YT%H:%M:%S".to_owned());
@@ -92,7 +92,7 @@ fn main() {
             min_window_size: Some(egui::Vec2::new(430.0, 250.0)),
             initial_window_size: Some(egui::Vec2::new(430.0, 250.0)),
             icon_data: Some(
-                IconData::try_from_png_bytes(include_bytes!("../assets/DriveAF-nobg.png")).unwrap(),
+                IconData::try_from_png_bytes(include_bytes!("../assets/driveaf.png")).unwrap(),
             ),
             ..Default::default()
         };
