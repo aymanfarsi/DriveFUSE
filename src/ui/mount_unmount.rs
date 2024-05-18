@@ -57,11 +57,8 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                             ui.label(status_text);
                             #[cfg(target_os = "windows")]
                             if is_mounted {
-                                ui.label(
-                                    app.mounted_storages
-                                        .get_mounted(storage.name.clone())
-                                        .unwrap_or("N/A".to_owned()),
-                                );
+                                let letter = app.app_config.get_drive_letter(&storage.name.clone());
+                                ui.label(letter.unwrap_or("N/A".to_string()));
                             } else {
                                 ComboBox::from_id_source(format!("drive_letter_{}", storage.name))
                                     .selected_text(app.new_storage_drive_letter.clone())
@@ -79,6 +76,10 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
 
                                             if response.clicked() {
                                                 *current_value = selected_value;
+                                                app.app_config.set_drives_letters(
+                                                    storage.name.clone(),
+                                                    *drive,
+                                                );
                                                 ui.close_menu();
                                             }
                                         }

@@ -77,13 +77,11 @@ pub fn unmount_delete_directory(name: String) {
 }
 
 pub fn enable_auto_mount(app: &mut RcloneApp) {
-    app.app_config.is_auto_mount = true;
-    app.app_config.save();
+    app.app_config.set_is_auto_mount(true);
 }
 
 pub fn disable_auto_mount(app: &mut RcloneApp) {
-    app.app_config.is_auto_mount = false;
-    app.app_config.save();
+    app.app_config.set_is_auto_mount(false);
 }
 
 pub fn enable_auto_start_app() {
