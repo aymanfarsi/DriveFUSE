@@ -85,7 +85,7 @@ fn main() {
         let _enter = rt.enter();
 
         let app = RcloneApp::default();
-        let min_size = egui::Vec2::new(475., 250.0);
+        let min_size = egui::Vec2::new(490., 292.5);
 
         let native_options = eframe::NativeOptions {
             centered: true,

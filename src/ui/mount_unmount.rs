@@ -1,4 +1,4 @@
-use egui::{Button, CentralPanel, Color32, Context, Grid, RichText, Rounding, ScrollArea};
+use egui::{vec2, Button, CentralPanel, Color32, Context, Grid, RichText, Rounding, ScrollArea};
 
 #[cfg(target_os = "windows")]
 use {crate::utilities::utils::available_drives, egui::ComboBox};
@@ -29,7 +29,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                         ui.label("Status");
                         #[cfg(target_os = "windows")]
                         ui.label("Drive Letter");
-                        ui.label("Action");
+                        ui.label("Action | Auto Mount");
                         // ui.label("Auto Mount");
                         ui.end_row();
 
@@ -90,7 +90,21 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                             }
 
                             ui.horizontal(|ui| {
-                                let mount_buttton = ui.button(action_text);
+                                let mount_buttton = ui.add_sized(
+                                    vec2(60.0, 20.0),
+                                    Button::new(RichText::new(action_text).color(if is_mounted {
+                                        Color32::WHITE
+                                    } else {
+                                        Color32::BLACK
+                                    }))
+                                    .frame(true)
+                                    .fill(if is_mounted {
+                                        Color32::RED
+                                    } else {
+                                        Color32::LIGHT_GREEN
+                                    })
+                                    .rounding(Rounding::same(5.)),
+                                );
                                 if mount_buttton.clicked() {
                                     #[cfg(target_os = "windows")]
                                     {

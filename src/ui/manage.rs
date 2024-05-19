@@ -1,4 +1,4 @@
-use egui::{CentralPanel, Context, Grid, RichText, ScrollArea};
+use egui::{vec2, Button, CentralPanel, Context, CursorIcon, Grid, RichText, Rounding, ScrollArea};
 
 use crate::{utilities::enums::StorageType, RcloneApp};
 
@@ -30,7 +30,13 @@ pub fn render_manage(ctx: &Context, app: &mut RcloneApp) {
                                 ui.end_row();
                             }
 
-                            if ui.button(storage_type.name()).clicked() {
+                            let btn = ui
+                                .add_sized(
+                                    vec2(100.0, 30.0),
+                                    Button::new(storage_type.name()).rounding(Rounding::same(5.)),
+                                )
+                                .on_hover_cursor(CursorIcon::PointingHand);
+                            if btn.clicked() {
                                 app.rclone
                                     .add_storage(app.new_storage_name.clone(), *storage_type);
                                 app.new_storage_name = String::new();
