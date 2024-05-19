@@ -1,4 +1,4 @@
-use egui::{Button, CentralPanel, Context, ScrollArea};
+use egui::{vec2, Button, CentralPanel, Context, Rounding, ScrollArea};
 
 use crate::{
     utilities::{
@@ -44,11 +44,21 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                     ui.label("Theme mode:");
 
                     for theme in AppTheme::values() {
-                        let response = ui.selectable_value(
-                            &mut app.app_config.current_theme,
-                            theme,
-                            theme.name().to_string(),
+                        let response = ui.add_sized(
+                            vec2(50.0, 20.0),
+                            Button::new(theme.name())
+                                .fill(if app.app_config.current_theme == theme {
+                                    theme.get_highlight_color()
+                                } else {
+                                    Default::default()
+                                })
+                                .rounding(Rounding::same(5.)),
                         );
+                        // ui.selectable_value(
+                        //     &mut app.app_config.current_theme,
+                        //     theme,
+                        //     theme.name().to_string(),
+                        // );
                         if response.clicked() {
                             theme.set_theme(ctx);
                             app.app_config.set_current_theme(theme);
@@ -59,8 +69,11 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                 ui.add_space(8.0);
 
                 ui.horizontal(|ui| {
-                    ui.label("Auto start:");
                     let is_auto_start = is_app_auto_start();
+                    ui.label(format!(
+                        "Auto start is {}",
+                        if is_auto_start { "enabled" } else { "disabled" }
+                    ));
                     if ui
                         .add(Button::new(if is_auto_start {
                             "Disable"
@@ -80,8 +93,11 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                 ui.add_space(8.0);
 
                 ui.horizontal(|ui| {
-                    ui.label("Auto mount:");
                     let is_auto_mount = app.app_config.is_auto_mount;
+                    ui.label(format!(
+                        "Auto mount is {}",
+                        if is_auto_mount { "enabled" } else { "disabled" }
+                    ));
                     if ui
                         .add(Button::new(if is_auto_mount {
                             "Disable"
