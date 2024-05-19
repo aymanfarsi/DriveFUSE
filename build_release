@@ -11,7 +11,7 @@ else
     echo "Building for Linux"
 fi
 
-cargo build --release
+# cargo build --release
 
 echo "Bundle the app"
 cargo bundle --release
