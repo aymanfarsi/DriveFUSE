@@ -92,15 +92,6 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                     if is_mounted {
                                         app.mounted_storages.unmount(storage.name.clone());
                                     } else {
-                                        // let drive_letter = app.new_storage_drive_letter.clone();
-                                        // let is_mounted = app.mounted_storages.is_drive_letter_mounted(
-                                        //     drive_letter.chars().next().unwrap(),
-                                        // );
-                                        // if is_mounted {
-                                        //     let possible_drives = available_drives();
-                                        //     app.new_storage_drive_letter =
-                                        //         possible_drives.first().unwrap().to_string();
-                                        // }
                                         let is_drive_letter_mounted =
                                             app.mounted_storages.is_drive_letter_mounted(
                                                 letter.clone().chars().next().unwrap(),
@@ -112,7 +103,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                                 false,
                                                 &mut app.app_config,
                                             );
-                                        } else {
+                                        } else if letter == "N/A" {
                                             let possible_drives = available_drives();
                                             let first_drive = possible_drives.first().unwrap();
                                             app.app_config.set_drives_letters(
@@ -121,6 +112,13 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                             );
                                             app.mounted_storages.mount(
                                                 first_drive.to_string(),
+                                                storage.name.clone(),
+                                                false,
+                                                &mut app.app_config,
+                                            );
+                                        } else {
+                                            app.mounted_storages.mount(
+                                                letter.clone(),
                                                 storage.name.clone(),
                                                 false,
                                                 &mut app.app_config,
