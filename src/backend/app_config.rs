@@ -14,6 +14,7 @@ pub struct AppConfig {
     pub is_auto_mount: bool,
 
     pub current_theme: AppTheme,
+    pub hide_storage_label: bool,
 
     pub drives_letters: HashMap<String, char>,
     pub drives_auto_mount: HashMap<String, bool>,
@@ -34,6 +35,7 @@ impl AppConfig {
                 is_first_run: true,
                 is_auto_mount: false,
                 current_theme: AppTheme::Dark,
+                hide_storage_label: false,
                 drives_letters: HashMap::new(),
                 drives_auto_mount: HashMap::new(),
             })
@@ -79,6 +81,11 @@ impl AppConfig {
 
     pub fn set_current_theme(&mut self, current_theme: AppTheme) {
         self.current_theme = current_theme;
+        self.save();
+    }
+
+    pub fn set_hide_storage_label(&mut self, hide_storage_label: bool) {
+        self.hide_storage_label = hide_storage_label;
         self.save();
     }
 

@@ -1,4 +1,4 @@
-use egui::{menu, Align, Context, Layout, RichText, TextStyle, TopBottomPanel};
+use egui::{menu, vec2, Align, Button, Context, Layout, RichText, TextStyle, TopBottomPanel};
 
 use crate::{
     utilities::enums::{Message, Tab},
@@ -46,7 +46,21 @@ pub fn render_top_panel(ctx: &Context, app: &mut RcloneApp) {
                             app.current_tab = tab;
                         }
                     }
-                    ui.add_space(3.);
+
+                    let available_space = ui.available_width();
+                    ui.add_space(available_space - 50.);
+
+                    let hide_btn = ui.add_sized(
+                        vec2(50., 20.),
+                        Button::new(if app.app_config.hide_storage_label {
+                            "Show"
+                        } else {
+                            "Hide"
+                        }),
+                    );
+                    if hide_btn.clicked() {
+                        app.app_config.hide_storage_label = !app.app_config.hide_storage_label;
+                    }
                 });
             });
         });

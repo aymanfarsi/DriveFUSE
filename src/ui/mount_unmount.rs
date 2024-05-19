@@ -56,7 +56,11 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                 _ => "Unknown",
                             };
 
-                            ui.label(storage.name.to_string());
+                            ui.label(if app.app_config.hide_storage_label {
+                                "*".repeat(storage.name.len())
+                            } else {
+                                storage.name.clone()
+                            });
                             ui.label(drive_type);
                             ui.label(status_text);
                             let letter = app

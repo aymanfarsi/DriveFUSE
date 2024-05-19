@@ -113,6 +113,31 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                         }
                     }
                 });
+
+                ui.add_space(8.0);
+
+                ui.horizontal(|ui| {
+                    let is_hide_storage_label = app.app_config.hide_storage_label;
+                    ui.label(format!(
+                        "Labels are {}",
+                        if is_hide_storage_label {
+                            "hidden"
+                        } else {
+                            "visible"
+                        }
+                    ));
+                    if ui
+                        .add(Button::new(if is_hide_storage_label {
+                            "Disable"
+                        } else {
+                            "Enable"
+                        }))
+                        .clicked()
+                    {
+                        app.app_config
+                            .set_hide_storage_label(!is_hide_storage_label);
+                    }
+                });
             });
     });
 }
