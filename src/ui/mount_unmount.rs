@@ -49,6 +49,9 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                             let drive_type = match storage.drive_type.as_str() {
                                 "drive" => "Google Drive",
                                 "onedrive" => "OneDrive",
+                                "dropbox" => "Dropbox",
+                                "googlephotos" => "Google Photos",
+                                "mega" => "Mega",
                                 _ => "Unknown",
                             };
 
