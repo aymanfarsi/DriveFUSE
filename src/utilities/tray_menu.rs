@@ -35,22 +35,22 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
     })
     .unwrap();
 
-    #[cfg(target_os = "windows")]
-    tray.inner_mut().add_separator().unwrap();
+    // #[cfg(target_os = "windows")]
+    // tray.inner_mut().add_separator().unwrap();
 
-    let enable_auto_mount_tx = tx.clone();
-    tray.add_menu_item("Enable auto mount", move || {
-        enable_auto_mount_tx.send(Message::EnableAutoMount).unwrap();
-    })
-    .unwrap();
+    // let enable_auto_mount_tx = tx.clone();
+    // tray.add_menu_item("Enable auto mount", move || {
+    //     enable_auto_mount_tx.send(Message::EnableAutoMount).unwrap();
+    // })
+    // .unwrap();
 
-    let disable_auto_mount_tx = tx.clone();
-    tray.add_menu_item("Disable auto mount", move || {
-        disable_auto_mount_tx
-            .send(Message::DisableAutoMount)
-            .unwrap();
-    })
-    .unwrap();
+    // let disable_auto_mount_tx = tx.clone();
+    // tray.add_menu_item("Disable auto mount", move || {
+    //     disable_auto_mount_tx
+    //         .send(Message::DisableAutoMount)
+    //         .unwrap();
+    // })
+    // .unwrap();
 
     // #[cfg(target_os = "windows")]
     // tray.inner_mut().add_separator().unwrap();

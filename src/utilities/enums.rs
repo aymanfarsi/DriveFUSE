@@ -32,8 +32,8 @@ pub enum Message {
     // UnmountStorage(String),
     MountAll,
     UnmountAll,
-    EnableAutoMount,
-    DisableAutoMount,
+    // EnableAutoMount,
+    // DisableAutoMount,
     // EnableAutoStart,
     // DisableAutoStart,
 }

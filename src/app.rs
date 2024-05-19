@@ -133,15 +133,15 @@ impl eframe::App for RcloneApp {
                             Ok(Message::UnmountAll) => {
                                 tx_egui_clone_tray.send(Message::UnmountAll).unwrap();
                                 ctx_clone_tray.request_repaint();
-                            }
-                            Ok(Message::EnableAutoMount) => {
-                                tx_egui_clone_tray.send(Message::EnableAutoMount).unwrap();
-                                ctx_clone_tray.request_repaint();
-                            }
-                            Ok(Message::DisableAutoMount) => {
-                                tx_egui_clone_tray.send(Message::DisableAutoMount).unwrap();
-                                ctx_clone_tray.request_repaint();
-                            } // Ok(Message::EnableAutoStart) => {
+                            } // Ok(Message::EnableAutoMount) => {
+                              //     tx_egui_clone_tray.send(Message::EnableAutoMount).unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::DisableAutoMount) => {
+                              //     tx_egui_clone_tray.send(Message::DisableAutoMount).unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::EnableAutoStart) => {
                               //     tx_egui_clone_tray.send(Message::EnableAutoStart).unwrap();
                               //     ctx_clone_tray.request_repaint();
                               // }
@@ -245,13 +245,13 @@ impl eframe::App for RcloneApp {
                 }
                 Message::UnmountAll => {
                     self.mounted_storages.unmount_all();
-                }
-                Message::EnableAutoMount => {
-                    self.app_config.set_is_auto_mount(true);
-                }
-                Message::DisableAutoMount => {
-                    self.app_config.set_is_auto_mount(false);
-                } // Message::EnableAutoStart => {
+                } // Message::EnableAutoMount => {
+                  //     self.app_config.set_is_auto_mount(true);
+                  // }
+                  // Message::DisableAutoMount => {
+                  //     self.app_config.set_is_auto_mount(false);
+                  // }
+                  // Message::EnableAutoStart => {
                   //     enable_auto_start_app();
                   // }
                   // Message::DisableAutoStart => {
