@@ -6,12 +6,15 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::utilities::utils::app_config_path;
+use crate::utilities::{enums::AppTheme, utils::app_config_path};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AppConfig {
     pub is_first_run: bool,
     pub is_auto_mount: bool,
+
+    pub current_theme: AppTheme,
+
     pub drives_letters: HashMap<String, char>,
 }
 
@@ -29,6 +32,7 @@ impl AppConfig {
             let json = serde_json::to_string_pretty(&AppConfig {
                 is_first_run: true,
                 is_auto_mount: false,
+                current_theme: AppTheme::Dark,
                 drives_letters: HashMap::new(),
             })
             .unwrap();
@@ -68,6 +72,11 @@ impl AppConfig {
 
     pub fn set_is_auto_mount(&mut self, is_auto_mount: bool) {
         self.is_auto_mount = is_auto_mount;
+        self.save();
+    }
+
+    pub fn set_current_theme(&mut self, current_theme: AppTheme) {
+        self.current_theme = current_theme;
         self.save();
     }
 

@@ -3,7 +3,7 @@ use egui::{CentralPanel, Color32, Context, Grid, RichText, ScrollArea};
 #[cfg(target_os = "windows")]
 use {crate::utilities::utils::available_drives, egui::ComboBox};
 
-use crate::RcloneApp;
+use crate::{utilities::enums::AppTheme, RcloneApp};
 
 pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
     CentralPanel::default().show(ctx, |ui| {
@@ -19,7 +19,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
             .auto_shrink([false, true])
             .show(ui, |ui| {
                 Grid::new("storage_grid")
-                    .striped(true)
+                    .striped(app.app_config.current_theme == AppTheme::Dark)
                     .num_columns(4)
                     .spacing([8.0, 8.0])
                     .min_col_width(80.0)
@@ -105,9 +105,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                             app.mounted_storages.is_drive_letter_mounted(
                                                 letter.clone().chars().next().unwrap(),
                                             );
-                                        if letter != "N/A"
-                                            && !is_drive_letter_mounted
-                                        {
+                                        if letter != "N/A" && !is_drive_letter_mounted {
                                             app.mounted_storages.mount(
                                                 letter.clone(),
                                                 storage.name.clone(),
@@ -153,9 +151,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                             app.mounted_storages.is_drive_letter_mounted(
                                                 letter.clone().chars().next().unwrap(),
                                             );
-                                        if letter != "N/A"
-                                            && !is_already_mounted
-                                        {
+                                        if letter != "N/A" && !is_already_mounted {
                                             app.mounted_storages.mount(
                                                 letter,
                                                 storage.name.clone(),

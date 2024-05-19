@@ -72,8 +72,12 @@ impl RcloneApp {
 
 impl eframe::App for RcloneApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        // * First run setup
         if self.is_first_run {
             self.is_first_run = false;
+
+            // * Set theme
+            self.app_config.current_theme.set_theme(ctx);
 
             // * Spawn tray menu thread on first run
             #[cfg(target_os = "windows")]

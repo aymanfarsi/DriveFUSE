@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tab {
     MountUnmount,
@@ -64,5 +66,73 @@ impl StorageType {
             StorageType::GooglePhotos,
             StorageType::Mega,
         ]
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub enum AppTheme {
+    #[serde(rename = "light")]
+    Light,
+
+    #[serde(rename = "dark")]
+    Dark,
+
+    #[serde(rename = "frappe")]
+    FRAPPE,
+
+    #[serde(rename = "latte")]
+    LATTE,
+
+    #[serde(rename = "macchiato")]
+    MACCHIATO,
+
+    #[serde(rename = "mocha")]
+    MOCHA,
+}
+
+impl AppTheme {
+    pub fn name(&self) -> &str {
+        match self {
+            AppTheme::Light => "Light",
+            AppTheme::Dark => "Dark",
+            AppTheme::FRAPPE => "Frappe",
+            AppTheme::LATTE => "Latte",
+            AppTheme::MACCHIATO => "Macchiato",
+            AppTheme::MOCHA => "Mocha",
+        }
+    }
+
+    pub fn values() -> [AppTheme; 6] {
+        [
+            AppTheme::Light,
+            AppTheme::Dark,
+            AppTheme::FRAPPE,
+            AppTheme::LATTE,
+            AppTheme::MACCHIATO,
+            AppTheme::MOCHA,
+        ]
+    }
+
+    pub fn set_theme(&self, ctx: &egui::Context) {
+        match self {
+            AppTheme::Light => {
+                ctx.set_visuals(egui::Visuals::light());
+            }
+            AppTheme::Dark => {
+                ctx.set_visuals(egui::Visuals::dark());
+            }
+            AppTheme::FRAPPE => {
+                catppuccin_egui::set_theme(ctx, catppuccin_egui::FRAPPE);
+            }
+            AppTheme::LATTE => {
+                catppuccin_egui::set_theme(ctx, catppuccin_egui::LATTE);
+            }
+            AppTheme::MACCHIATO => {
+                catppuccin_egui::set_theme(ctx, catppuccin_egui::MACCHIATO);
+            }
+            AppTheme::MOCHA => {
+                catppuccin_egui::set_theme(ctx, catppuccin_egui::MOCHA);
+            }
+        }
     }
 }

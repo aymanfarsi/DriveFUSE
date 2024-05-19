@@ -1,6 +1,15 @@
 use egui::{Button, CentralPanel, Context, ScrollArea};
 
-use crate::{utilities::utils::{is_app_auto_start, disable_auto_start_app, enable_auto_start_app, enable_auto_mount, disable_auto_mount}, RcloneApp};
+use crate::{
+    utilities::{
+        enums::AppTheme,
+        utils::{
+            disable_auto_mount, disable_auto_start_app, enable_auto_mount, enable_auto_start_app,
+            is_app_auto_start,
+        },
+    },
+    RcloneApp,
+};
 
 pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
     CentralPanel::default().show(ctx, |ui| {
@@ -33,9 +42,18 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
 
                 ui.horizontal(|ui| {
                     ui.label("Theme mode:");
-                    let mut visuals = ui.ctx().style().visuals.clone();
-                    visuals.light_dark_radio_buttons(ui);
-                    ui.ctx().set_visuals(visuals);
+
+                    for theme in AppTheme::values() {
+                        let response = ui.selectable_value(
+                            &mut app.app_config.current_theme,
+                            theme,
+                            theme.name().to_string(),
+                        );
+                        if response.clicked() {
+                            theme.set_theme(ctx);
+                            app.app_config.set_current_theme(theme);
+                        }
+                    }
                 });
 
                 ui.add_space(8.0);
