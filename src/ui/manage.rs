@@ -1,4 +1,4 @@
-use egui::{CentralPanel, Context, RichText, ScrollArea};
+use egui::{CentralPanel, Context, Grid, RichText, ScrollArea};
 
 use crate::{utilities::enums::StorageType, RcloneApp};
 
@@ -20,21 +20,25 @@ pub fn render_manage(ctx: &Context, app: &mut RcloneApp) {
 
                 ui.add_space(8.0);
 
-                ui.horizontal(|ui| {
-                    if ui.button("Google Drive").clicked() {
-                        app.rclone
-                            .add_storage(app.new_storage_name.clone(), StorageType::GoogleDrive);
-                        app.new_storage_name = String::new();
-                    }
-                    ui.add_space(8.0);
-                    if ui.button("OneDrive").clicked() {
-                        app.rclone
-                            .add_storage(app.new_storage_name.clone(), StorageType::OneDrive);
-                        app.new_storage_name = String::new();
-                    }
-                });
+                Grid::new("add_storage_grid")
+                    .striped(false)
+                    .num_columns(4)
+                    .spacing([8.0, 8.0])
+                    .show(ui, |ui| {
+                        for (idx, storage_type) in StorageType::values().iter().enumerate() {
+                            if idx % 4 == 0 && idx != 0 {
+                                ui.end_row();
+                            }
 
-                ui.add_space(8.0);
+                            if ui.button(storage_type.name()).clicked() {
+                                app.rclone
+                                    .add_storage(app.new_storage_name.clone(), *storage_type);
+                                app.new_storage_name = String::new();
+                            }
+                        }
+                    });
+
+                // ui.add_space(8.0);
 
                 // // * Select storage
                 // ComboBox::from_label("")

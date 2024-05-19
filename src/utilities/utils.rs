@@ -168,6 +168,7 @@ pub fn app_config_path() -> Option<PathBuf> {
     }
 }
 
+// Google Drive
 pub fn add_google_drive_storage(name: String) {
     tokio::spawn(async move {
         let mut cmd = Command::new("rclone");
@@ -176,8 +177,7 @@ pub fn add_google_drive_storage(name: String) {
             String::from("create"),
             name.trim().to_string(),
             String::from("drive"),
-            String::from("config_is_local"),
-            String::from("true"),
+            String::from("config_is_local=true"),
         ]);
 
         #[cfg(target_os = "windows")]
@@ -187,6 +187,7 @@ pub fn add_google_drive_storage(name: String) {
     });
 }
 
+// OneDrive
 pub fn add_onedrive_storage(name: String) {
     tokio::spawn(async move {
         let mut cmd = Command::new("rclone");
@@ -195,8 +196,64 @@ pub fn add_onedrive_storage(name: String) {
             String::from("create"),
             name.trim().to_string(),
             String::from("onedrive"),
-            String::from("config_is_local"),
-            String::from("true"),
+            String::from("config_is_local=true"),
+        ]);
+
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        cmd.spawn().unwrap();
+    });
+}
+
+// Dropbox
+pub fn add_dropbox_storage(name: String) {
+    tokio::spawn(async move {
+        let mut cmd = Command::new("rclone");
+        let cmd = cmd.args(&[
+            String::from("config"),
+            String::from("create"),
+            name.trim().to_string(),
+            String::from("dropbox"),
+            String::from("config_is_local=true"),
+        ]);
+
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        cmd.spawn().unwrap();
+    });
+}
+
+// Google Photos
+pub fn add_google_photos_storage(name: String) {
+    tokio::spawn(async move {
+        let mut cmd = Command::new("rclone");
+        let cmd = cmd.args(&[
+            String::from("config"),
+            String::from("create"),
+            name.trim().to_string(),
+            String::from("googlephotos"),
+            String::from("config_is_local=true"),
+        ]);
+
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        cmd.spawn().unwrap();
+    });
+}
+
+// Mega
+pub fn add_mega_storage(name: String) {
+    tokio::spawn(async move {
+        let mut cmd = Command::new("rclone");
+        let cmd = cmd.args(&[
+            String::from("config"),
+            String::from("create"),
+            name.trim().to_string(),
+            String::from("mega"),
+            String::from("config_is_local=true"),
         ]);
 
         #[cfg(target_os = "windows")]

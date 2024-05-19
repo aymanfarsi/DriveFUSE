@@ -37,7 +37,32 @@ pub enum Message {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum StorageType{
+pub enum StorageType {
     GoogleDrive,
     OneDrive,
+    Dropbox,
+    GooglePhotos,
+    Mega,
+}
+
+impl StorageType {
+    pub fn name(&self) -> &str {
+        match self {
+            StorageType::GoogleDrive => "Google Drive",
+            StorageType::OneDrive => "OneDrive",
+            StorageType::Dropbox => "Dropbox",
+            StorageType::GooglePhotos => "Google Photos",
+            StorageType::Mega => "Mega",
+        }
+    }
+
+    pub fn values() -> [StorageType; 5] {
+        [
+            StorageType::GoogleDrive,
+            StorageType::OneDrive,
+            StorageType::Dropbox,
+            StorageType::GooglePhotos,
+            StorageType::Mega,
+        ]
+    }
 }
