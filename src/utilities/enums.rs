@@ -138,8 +138,8 @@ impl AppTheme {
 
     pub fn get_highlight_color(&self) -> egui::Color32 {
         match self {
-            AppTheme::Light => egui::Color32::from_rgb(0, 0, 0),
-            AppTheme::Dark => egui::Color32::from_rgb(255, 255, 255),
+            AppTheme::Light => egui::Color32::from_rgb(255, 255, 255),
+            AppTheme::Dark => egui::Color32::from_rgb(0, 0, 0),
             AppTheme::FRAPPE => catppuccin_egui::FRAPPE.blue,
             AppTheme::LATTE => catppuccin_egui::LATTE.blue,
             AppTheme::MACCHIATO => catppuccin_egui::MACCHIATO.blue,
