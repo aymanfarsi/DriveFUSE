@@ -21,7 +21,10 @@ pub fn render_top_panel(ctx: &Context, app: &mut RcloneApp) {
                     label.context_menu(|ui| {
                         if ui.button("Mount all").clicked() {
                             app.mounted_storages.unmount_all();
-                            app.mounted_storages.mount_all(app.rclone.storages.clone());
+                            app.mounted_storages.mount_all(
+                                app.rclone.storages.clone(),
+                                app.app_config.drives_letters.clone(),
+                            );
                             ui.close_menu();
                         }
                         if ui.button("Unmount all").clicked() {

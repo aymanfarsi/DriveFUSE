@@ -74,24 +74,29 @@ impl MountingStorage {
         self.mounted.get(&name).map(|c| c.to_string())
     }
 
-    pub fn mount_all(&mut self, drives: Vec<Storage>) -> bool {
+    pub fn mount_all(
+        &mut self,
+        drives: Vec<Storage>,
+        drives_letters: HashMap<String, char>,
+    ) -> bool {
         #[cfg(target_os = "windows")]
         {
             let mut success = true;
-            let mut available_drives = available_drives();
+            // let mut available_drives = available_drives();
             for drive in drives {
-                let next_drive = available_drives.first().unwrap().to_string();
-                let id = Self::mount_windows(drive.name.clone(), next_drive.clone(), false);
+                // let next_drive = available_drives.first().unwrap().to_string();
+                let letter = drives_letters.get(&drive.name).unwrap().to_string();
+                let id = Self::mount_windows(drive.name.clone(), letter.clone(), false);
                 match id {
                     Some(id) => {
-                        available_drives.remove(0);
-                        tracing::info!("Mounted {} to {}", drive.name, next_drive);
+                        // available_drives.remove(0);
+                        tracing::info!("Mounted {} to {}", drive.name, letter);
                         self.drives.insert(drive.name.clone(), id);
                         self.mounted
-                            .insert(drive.name, next_drive.chars().next().unwrap());
+                            .insert(drive.name, letter.chars().next().unwrap());
                     }
                     None => {
-                        tracing::error!("Failed to mount {} to {}", drive.name, next_drive);
+                        tracing::error!("Failed to mount {} to {}", drive.name, letter);
                         success = false;
                     }
                 }
@@ -236,7 +241,9 @@ impl MountingStorage {
                 None => {
                     tracing::error!(
                         "Failed to mount {} to /home/{}/drive_af/{}",
-                        username, name, name
+                        username,
+                        name,
+                        name
                     );
                 }
             }
@@ -254,7 +261,9 @@ impl MountingStorage {
                 None => {
                     tracing::error!(
                         "Failed to mount {} to /Users/{}/drive_af/{}",
-                        username, name, name
+                        username,
+                        name,
+                        name
                     );
                 }
             }
@@ -410,7 +419,10 @@ impl MountingStorage {
             Err(e) => {
                 tracing::error!(
                     "Error mounting {} at /home/{}/drive_af/{}: due to {}",
-                    username, name, name, e
+                    username,
+                    name,
+                    name,
+                    e
                 );
                 None
             }
@@ -444,7 +456,10 @@ impl MountingStorage {
             Err(e) => {
                 tracing::error!(
                     "Error mounting {} at /Users/{}/drive_af/{}: due to {}",
-                    username, name, name, e
+                    username,
+                    name,
+                    name,
+                    e
                 );
                 None
             }

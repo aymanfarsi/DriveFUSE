@@ -220,7 +220,8 @@ impl eframe::App for RcloneApp {
                         }
                     }
                 }
-                self.mounted_storages.mount_all(drives);
+                self.mounted_storages
+                    .mount_all(drives, self.app_config.drives_letters.clone());
             }
         }
 
@@ -251,8 +252,10 @@ impl eframe::App for RcloneApp {
                     self.rclone = Rclone::init();
                 }
                 Message::MountAll => {
-                    self.mounted_storages
-                        .mount_all(self.rclone.storages.clone());
+                    self.mounted_storages.mount_all(
+                        self.rclone.storages.clone(),
+                        self.app_config.drives_letters.clone(),
+                    );
                 }
                 Message::UnmountAll => {
                     self.mounted_storages.unmount_all();
