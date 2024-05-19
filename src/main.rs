@@ -85,14 +85,15 @@ fn main() {
         let _enter = rt.enter();
 
         let app = RcloneApp::default();
+        let min_size = egui::Vec2::new(430.0, 250.0);
 
         let native_options = eframe::NativeOptions {
             centered: true,
             decorated: true,
             transparent: false,
-            resizable: false,
-            min_window_size: Some(egui::Vec2::new(430.0, 250.0)),
-            initial_window_size: Some(egui::Vec2::new(430.0, 250.0)),
+            resizable: true,
+            min_window_size: Some(min_size),
+            initial_window_size: Some(min_size),
             icon_data: Some(
                 IconData::try_from_png_bytes(include_bytes!("../assets/driveaf.png")).unwrap(),
             ),
