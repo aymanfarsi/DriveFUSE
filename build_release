@@ -13,5 +13,5 @@ fi
 
 cargo build --release
 
-# echo "Bundle the app"
-# cargo bundle --release
+echo "Bundle the app"
+cargo bundle --release

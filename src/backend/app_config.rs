@@ -16,6 +16,7 @@ pub struct AppConfig {
     pub current_theme: AppTheme,
 
     pub drives_letters: HashMap<String, char>,
+    pub drives_auto_mount: HashMap<String, bool>,
 }
 
 impl AppConfig {
@@ -34,6 +35,7 @@ impl AppConfig {
                 is_auto_mount: false,
                 current_theme: AppTheme::Dark,
                 drives_letters: HashMap::new(),
+                drives_auto_mount: HashMap::new(),
             })
             .unwrap();
             file.write_all(json.as_bytes()).unwrap();
@@ -87,5 +89,14 @@ impl AppConfig {
 
     pub fn get_drive_letter(&self, key: &str) -> Option<String> {
         self.drives_letters.get(key).map(|c| c.to_string())
+    }
+
+    pub fn set_drives_auto_mount(&mut self, key: String, value: bool) {
+        self.drives_auto_mount.insert(key, value);
+        self.save();
+    }
+
+    pub fn get_drive_auto_mount(&self, key: &str) -> Option<bool> {
+        self.drives_auto_mount.get(key).copied()
     }
 }

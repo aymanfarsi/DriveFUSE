@@ -12,11 +12,12 @@ pub fn render_top_panel(ctx: &Context, app: &mut RcloneApp) {
             ui.visuals_mut().button_frame = false;
             menu::bar(ui, |ui| {
                 ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                    let label = ui.label(
-                        RichText::new(app.mounted_storages.total_mounted().to_string())
-                            .size(14.)
-                            .strong(),
+                    let text = format!(
+                        "{}/{}",
+                        app.mounted_storages.total_mounted(),
+                        app.rclone.storages.len()
                     );
+                    let label = ui.label(RichText::new(text).size(14.).strong());
                     label.context_menu(|ui| {
                         if ui.button("Mount all").clicked() {
                             app.mounted_storages.unmount_all();

@@ -8,7 +8,11 @@ use tray_item::{IconSource, TrayItem};
 #[cfg(target_os = "windows")]
 use crate::utilities::tray_menu::init_tray_menu;
 use crate::{
-    backend::{app_config::AppConfig, mounting::MountingStorage, rclone::Rclone},
+    backend::{
+        app_config::AppConfig,
+        mounting::MountingStorage,
+        rclone::{Rclone, Storage},
+    },
     ui::{
         manage::render_manage, mount_unmount::render_mount_unmount, settings::render_settings,
         top_panel::render_top_panel,
@@ -208,8 +212,15 @@ impl eframe::App for RcloneApp {
 
             // * Auto mount drives on startup
             if self.app_config.is_auto_mount {
-                self.mounted_storages
-                    .mount_all(self.rclone.storages.clone());
+                let mut drives: Vec<Storage> = vec![];
+                for storage in self.rclone.storages.clone() {
+                    if let Some(drive) = self.app_config.get_drive_auto_mount(&storage.name) {
+                        if drive {
+                            drives.push(storage.clone())
+                        }
+                    }
+                }
+                self.mounted_storages.mount_all(drives);
             }
         }
 
