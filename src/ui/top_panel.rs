@@ -24,6 +24,7 @@ pub fn render_top_panel(ctx: &Context, app: &mut RcloneApp) {
                             app.mounted_storages.mount_all(
                                 app.rclone.storages.clone(),
                                 app.app_config.drives_letters.clone(),
+                                app.app_config.enable_network_mode,
                             );
                             ui.close_menu();
                         }

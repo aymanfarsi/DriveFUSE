@@ -220,8 +220,11 @@ impl eframe::App for RcloneApp {
                         }
                     }
                 }
-                self.mounted_storages
-                    .mount_all(drives, self.app_config.drives_letters.clone());
+                self.mounted_storages.mount_all(
+                    drives,
+                    self.app_config.drives_letters.clone(),
+                    self.app_config.enable_network_mode,
+                );
             }
         }
 
@@ -255,6 +258,7 @@ impl eframe::App for RcloneApp {
                     self.mounted_storages.mount_all(
                         self.rclone.storages.clone(),
                         self.app_config.drives_letters.clone(),
+                        self.app_config.enable_network_mode,
                     );
                 }
                 Message::UnmountAll => {

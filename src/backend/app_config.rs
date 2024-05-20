@@ -15,6 +15,7 @@ pub struct AppConfig {
 
     pub current_theme: AppTheme,
     pub hide_storage_label: bool,
+    pub enable_network_mode: bool,
 
     pub drives_letters: HashMap<String, char>,
     pub drives_auto_mount: HashMap<String, bool>,
@@ -34,8 +35,11 @@ impl AppConfig {
             let json = serde_json::to_string_pretty(&AppConfig {
                 is_first_run: true,
                 is_auto_mount: false,
+
                 current_theme: AppTheme::Dark,
                 hide_storage_label: false,
+                enable_network_mode: false,
+
                 drives_letters: HashMap::new(),
                 drives_auto_mount: HashMap::new(),
             })
@@ -86,6 +90,11 @@ impl AppConfig {
 
     pub fn set_hide_storage_label(&mut self, hide_storage_label: bool) {
         self.hide_storage_label = hide_storage_label;
+        self.save();
+    }
+
+    pub fn set_enable_network_mode(&mut self, enable_network_mode: bool) {
+        self.enable_network_mode = enable_network_mode;
         self.save();
     }
 

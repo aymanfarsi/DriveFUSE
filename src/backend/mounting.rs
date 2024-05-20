@@ -78,6 +78,7 @@ impl MountingStorage {
         &mut self,
         drives: Vec<Storage>,
         drives_letters: HashMap<String, char>,
+        network_mode: bool,
     ) -> bool {
         #[cfg(target_os = "windows")]
         {
@@ -86,7 +87,8 @@ impl MountingStorage {
             for drive in drives {
                 // let next_drive = available_drives.first().unwrap().to_string();
                 let letter = drives_letters.get(&drive.name).unwrap().to_string();
-                let id = Self::mount_windows(drive.name.clone(), letter.clone(), false);
+                let id =
+                    Self::mount_windows(drive.name.clone(), letter.clone(), false, network_mode);
                 match id {
                     Some(id) => {
                         // available_drives.remove(0);
@@ -210,18 +212,23 @@ impl MountingStorage {
         driver_letter: String,
         name: String,
         _show_terminal: bool,
-        app: &mut AppConfig,
+        app_config: &mut AppConfig,
     ) {
         #[cfg(target_os = "windows")]
         {
-            let id = Self::mount_windows(name.clone(), driver_letter.clone(), _show_terminal);
+            let id = Self::mount_windows(
+                name.clone(),
+                driver_letter.clone(),
+                _show_terminal,
+                app_config.enable_network_mode,
+            );
             match id {
                 Some(id) => {
                     tracing::info!("Mounted {} to {}", name, driver_letter);
                     self.drives.insert(name.clone(), id);
                     self.mounted
                         .insert(name.clone(), driver_letter.chars().next().unwrap());
-                    app.set_drives_letters(name, driver_letter.chars().next().unwrap());
+                    app_config.set_drives_letters(name, driver_letter.chars().next().unwrap());
                 }
                 None => {
                     tracing::error!("Failed to mount {} to {}", name, driver_letter);
@@ -328,7 +335,12 @@ impl MountingStorage {
     }
 
     #[cfg(target_os = "windows")]
-    fn mount_windows(name: String, driver_letter: String, show_terminal: bool) -> Option<u32> {
+    fn mount_windows(
+        name: String,
+        driver_letter: String,
+        show_terminal: bool,
+        network_mode: bool,
+    ) -> Option<u32> {
         let doc_app = UserDirs::new()
             .unwrap()
             .document_dir()
@@ -344,23 +356,17 @@ impl MountingStorage {
             .arg(format!("{}:", driver_letter))
             .arg("--vfs-cache-mode")
             .arg("full")
-            // .arg("--vfs-cache-max-age")
-            // .arg("0s")
             .arg("--volname")
             .arg(name.clone())
-            // .arg("--dir-cache-time")
-            // .arg("1000h")
             .arg("--log-level")
             .arg("ERROR")
             .arg("--log-file")
             .arg(format!("{}/rclone-{}.log", doc_app, name));
-        // .arg("--network-mode");
-        // .arg("--vfs-cache-max-size")
-        // .arg("100G")
-        // .arg("--drive-chunk-size")
-        // .arg("32M")
-        // .arg("--buffer-size")
-        // .arg("64M")
+
+        #[cfg(target_os = "windows")]
+        if network_mode {
+            process.arg("--network-mode");
+        }
 
         if show_terminal {
             process.creation_flags(winbase::CREATE_NEW_CONSOLE);
