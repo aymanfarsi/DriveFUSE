@@ -139,26 +139,26 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                     }
                 });
 
-                ui.add_space(8.0);
+                // ui.add_space(8.0);
 
-                ui.horizontal(|ui| {
-                    let is_network_mode = app.app_config.enable_network_mode;
-                    ui.label(format!(
-                        "Network mode is {} (Windows only)",
-                        if is_network_mode { "enabled" } else { "disabled" }
-                    ));
-                    if ui
-                        .add(Button::new(if is_network_mode {
-                            "Disable"
-                        } else {
-                            "Enable"
-                        }))
-                        .clicked()
-                    {
-                        app.app_config
-                            .set_enable_network_mode(!is_network_mode);
-                    }
-                });
+                // ui.horizontal(|ui| {
+                //     let is_network_mode = app.app_config.enable_network_mode;
+                //     ui.label(format!(
+                //         "Network mode is {} (Windows only)",
+                //         if is_network_mode { "enabled" } else { "disabled" }
+                //     ));
+                //     if ui
+                //         .add(Button::new(if is_network_mode {
+                //             "Disable"
+                //         } else {
+                //             "Enable"
+                //         }))
+                //         .clicked()
+                //     {
+                //         app.app_config
+                //             .set_enable_network_mode(!is_network_mode);
+                //     }
+                // });
             });
     });
 }
