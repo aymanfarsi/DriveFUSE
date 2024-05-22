@@ -1,6 +1,6 @@
 [package]
 name = "drive_af"
-version = "0.5.3"
+version = "0.7.5"
 authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
 rust-version = "1.70"
@@ -10,18 +10,19 @@ description = "A cross-platform cloud storage mounter."
 [package.metadata.bundle]
 name = "DriveAF"
 identifier = "io.github.aymanfarsi.drive_af"
-icon = ["DriveAF.ico", "icon-green.ico", "icon-red.ico"]
-version = "1.0.0"
-resources = ["assets"]
+icon = ["assets/*.ico"]
+short_description = "A cross-platform cloud storage mounter."
+long_description = "DriveAF is a cross-platform cloud storage mounter that allows you to mount your cloud storage as a local drive on your computer. It supports multiple cloud storage providers and allows you to mount multiple drives at the same time."
 
 [dependencies]
 # gui
-egui = "0.23.0"
+egui = "0.22.0"
+catppuccin-egui = { version = "3.1"}
 
 # filesystem
 directories = "5.0"
 notify = "6.1.1"
-rfd = "0.12.1"
+rfd = "0.14.1"
 chrono = "0.4.31"
 serde = { version = "1.0.190", features = ["derive"] }
 serde_json = { version = "1.0.108" }
@@ -37,41 +38,46 @@ rand = "0.8.5"
 auto-launch = "0.5.0"
 machine-uid = "0.5.1"
 tracing = "0.1.40"
-tracing-subscriber = {version = "0.3.18", features = ["fmt", "std", "local-time", "time", "chrono"] }
+tracing-subscriber = { version = "0.3.18", features = [
+    "fmt",
+    "std",
+    "local-time",
+    "time",
+    "chrono",
+] }
 tracing-appender = "0.2.3"
 
 # windows dependencies
 [target.'cfg(windows)'.dependencies]
-eframe = { version = "0.23.0", default-features = false, features = [
+eframe = { version = "0.22.0", default-features = false, features = [
     "default_fonts",
     "wgpu",
 ] }
-windows = { version = "0.52.0", features = ["Win32_Storage_FileSystem"] }
+windows = { version = "0.56.0", features = ["Win32_Storage_FileSystem"] }
 winapi = "0.3.9"
-tray-item = "0.9.0"
+tray-item = "0.10.0"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.12"
 
 # linux dependencies
 [target.'cfg(target_os = "linux")'.dependencies]
-eframe = { version = "0.23.0", default-features = false, features = [
+eframe = { version = "0.22.0", default-features = false, features = [
     "default_fonts",
     "wayland",
     "glow",
 ] }
-tray-item = { version = "0.9.0", features = ["libappindicator"] }
+tray-item = { version = "0.10.0", features = ["libappindicator"] }
 whoami = "1.4.1"
 
 # macos dependencies
 [target.'cfg(target_os = "macos")'.dependencies]
-eframe = { version = "0.23.0", default-features = false, features = [
+eframe = { version = "0.22.0", default-features = false, features = [
     "default_fonts",
     "wgpu",
 ] }
-tray-item = "0.9.0"
+tray-item = "0.10.0"
 whoami = "1.4.1"
 
 [package.metadata.packager]
 before-packaging-command = "cargo build --release"
-

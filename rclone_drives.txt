@@ -1,0 +1,110 @@
+1 / 1Fichier
+   \ (fichier)
+ 2 / Akamai NetStorage
+   \ (netstorage)
+ 3 / Alias for an existing remote
+   \ (alias)
+ 4 / Amazon S3 Compliant Storage Providers including AWS, Alibaba, ArvanCloud, Ceph, ChinaMobile, Cloudflare, DigitalOcean, Dreamhost, GCS, HuaweiOBS, IBMCOS, IDrive, IONOS, LyveCloud, Leviia, Liara, Linode, Minio, Netease, Petabox, RackCorp, Rclone, Scaleway, SeaweedFS, StackPath, Storj, Synology, TencentCOS, Wasabi, Qiniu and others
+   \ (s3)
+ 5 / Backblaze B2
+   \ (b2)
+ 6 / Better checksums for other remotes
+   \ (hasher)
+ 7 / Box
+   \ (box)
+ 8 / Cache a remote
+   \ (cache)
+ 9 / Citrix Sharefile
+   \ (sharefile)
+10 / Combine several remotes into one
+   \ (combine)
+11 / Compress a remote
+   \ (compress)
+12 / Dropbox
+   \ (dropbox)
+13 / Encrypt/Decrypt a remote
+   \ (crypt)
+14 / Enterprise File Fabric
+   \ (filefabric)
+15 / FTP
+   \ (ftp)
+16 / Google Cloud Storage (this is not Google Drive)
+   \ (google cloud storage)
+17 / Google Drive
+   \ (drive)
+18 / Google Photos
+   \ (google photos)
+19 / HTTP
+   \ (http)
+20 / Hadoop distributed file system
+   \ (hdfs)
+21 / HiDrive
+   \ (hidrive)
+22 / ImageKit.io
+   \ (imagekit)
+23 / In memory object storage system.
+   \ (memory)
+24 / Internet Archive
+   \ (internetarchive)
+25 / Jottacloud
+   \ (jottacloud)
+26 / Koofr, Digi Storage and other Koofr-compatible storage providers
+   \ (koofr)
+27 / Linkbox
+   \ (linkbox)
+28 / Local Disk
+   \ (local)
+29 / Mail.ru Cloud
+   \ (mailru)
+30 / Mega
+   \ (mega)
+31 / Microsoft Azure Blob Storage
+   \ (azureblob)
+32 / Microsoft Azure Files
+   \ (azurefiles)
+33 / Microsoft OneDrive
+   \ (onedrive)
+34 / OpenDrive
+   \ (opendrive)
+35 / OpenStack Swift (Rackspace Cloud Files, Blomp Cloud Storage, Memset Memstore, OVH)
+   \ (swift)
+36 / Oracle Cloud Infrastructure Object Storage
+   \ (oracleobjectstorage)
+37 / Pcloud
+   \ (pcloud)
+38 / PikPak
+   \ (pikpak)
+39 / Proton Drive
+   \ (protondrive)
+40 / Put.io
+   \ (putio)
+41 / QingCloud Object Storage
+   \ (qingstor)
+42 / Quatrix by Maytech
+   \ (quatrix)
+43 / SMB / CIFS
+   \ (smb)
+44 / SSH/SFTP
+   \ (sftp)
+45 / Sia Decentralized Cloud
+   \ (sia)
+46 / Storj Decentralized Cloud Storage
+   \ (storj)
+47 / Sugarsync
+   \ (sugarsync)
+48 / Transparently chunk/split large files
+   \ (chunker)
+49 / Union merges the contents of several upstream fs
+   \ (union)
+50 / Uptobox
+   \ (uptobox)
+51 / WebDAV
+   \ (webdav)
+52 / Yandex Disk
+   \ (yandex)
+53 / Zoho
+   \ (zoho)
+54 / premiumize.me
+   \ (premiumizeme)
+55 / seafile
+   \ (seafile)

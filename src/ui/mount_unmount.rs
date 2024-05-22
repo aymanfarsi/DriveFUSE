@@ -1,9 +1,9 @@
-use egui::{CentralPanel, Color32, Context, Grid, RichText, ScrollArea};
+use egui::{vec2, Button, CentralPanel, Color32, Context, Grid, RichText, Rounding, ScrollArea};
 
 #[cfg(target_os = "windows")]
 use {crate::utilities::utils::available_drives, egui::ComboBox};
 
-use crate::RcloneApp;
+use crate::{utilities::enums::AppTheme, RcloneApp};
 
 pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
     CentralPanel::default().show(ctx, |ui| {
@@ -19,7 +19,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
             .auto_shrink([false, true])
             .show(ui, |ui| {
                 Grid::new("storage_grid")
-                    .striped(true)
+                    .striped(app.app_config.current_theme == AppTheme::Dark)
                     .num_columns(4)
                     .spacing([8.0, 8.0])
                     .min_col_width(80.0)
@@ -29,7 +29,8 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                         ui.label("Status");
                         #[cfg(target_os = "windows")]
                         ui.label("Drive Letter");
-                        ui.label("Action");
+                        ui.label("Action | Auto Mount");
+                        // ui.label("Auto Mount");
                         ui.end_row();
 
                         for storage in &app.rclone.storages {
@@ -49,77 +50,110 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                             let drive_type = match storage.drive_type.as_str() {
                                 "drive" => "Google Drive",
                                 "onedrive" => "OneDrive",
+                                "dropbox" => "Dropbox",
+                                "googlephotos" => "Google Photos",
+                                "mega" => "Mega",
                                 _ => "Unknown",
                             };
 
-                            ui.label(storage.name.to_string());
+                            ui.label(if app.app_config.hide_storage_label {
+                                "*".repeat(storage.name.len())
+                            } else {
+                                storage.name.clone()
+                            });
                             ui.label(drive_type);
                             ui.label(status_text);
+                            let letter = app
+                                .app_config
+                                .get_drive_letter(&storage.name.clone())
+                                .unwrap_or("N/A".to_string());
                             #[cfg(target_os = "windows")]
                             if is_mounted {
-                                ui.label(
-                                    app.mounted_storages
-                                        .get_mounted(storage.name.clone())
-                                        .unwrap_or("N/A".to_owned()),
-                                );
+                                ui.label(letter.clone());
                             } else {
                                 ComboBox::from_id_source(format!("drive_letter_{}", storage.name))
-                                    .selected_text(app.new_storage_drive_letter.clone())
+                                    .selected_text(letter.clone())
                                     .width(70.)
                                     .show_ui(ui, |ui| {
                                         for drive in &possible_drives {
-                                            let current_value = &mut app.new_storage_drive_letter;
                                             let selected_value = drive.to_string();
                                             let text = drive.to_string();
 
-                                            let response = ui.selectable_label(
-                                                *current_value == selected_value,
-                                                text,
-                                            );
+                                            let response =
+                                                ui.selectable_label(selected_value == letter, text);
 
                                             if response.clicked() {
-                                                *current_value = selected_value;
+                                                app.app_config.set_drives_letters(
+                                                    storage.name.clone(),
+                                                    *drive,
+                                                );
                                                 ui.close_menu();
                                             }
                                         }
                                     });
                             }
 
-                            let mount_buttton = ui.button(action_text);
-                            if mount_buttton.clicked() {
-                                #[cfg(target_os = "windows")]
-                                {
-                                    if is_mounted {
-                                        app.mounted_storages.unmount(storage.name.clone());
+                            ui.horizontal(|ui| {
+                                let mount_buttton = ui.add_sized(
+                                    vec2(60.0, 20.0),
+                                    Button::new(RichText::new(action_text).color(if is_mounted {
+                                        Color32::WHITE
                                     } else {
-                                        // let drive_letter = app.new_storage_drive_letter.clone();
-                                        // let is_mounted = app.mounted_storages.is_drive_letter_mounted(
-                                        //     drive_letter.chars().next().unwrap(),
-                                        // );
-                                        // if is_mounted {
-                                        //     let possible_drives = available_drives();
-                                        //     app.new_storage_drive_letter =
-                                        //         possible_drives.first().unwrap().to_string();
-                                        // }
-                                        let is_drive_letter_mounted =
-                                            app.mounted_storages.is_drive_letter_mounted(
-                                                app.new_storage_drive_letter
-                                                    .chars()
-                                                    .next()
-                                                    .unwrap(),
-                                            );
-                                        if app.new_storage_drive_letter != "N/A"
-                                            && !is_drive_letter_mounted
-                                        {
-                                            app.mounted_storages.mount(
-                                                app.new_storage_drive_letter.clone(),
-                                                storage.name.clone(),
-                                                false,
-                                            );
+                                        Color32::BLACK
+                                    }))
+                                    .frame(true)
+                                    .fill(if is_mounted {
+                                        Color32::RED
+                                    } else {
+                                        Color32::LIGHT_GREEN
+                                    })
+                                    .rounding(Rounding::same(5.)),
+                                );
+                                if mount_buttton.clicked() {
+                                    #[cfg(target_os = "windows")]
+                                    {
+                                        if is_mounted {
+                                            app.mounted_storages.unmount(storage.name.clone());
                                         } else {
-                                            let possible_drives = available_drives();
-                                            app.new_storage_drive_letter =
-                                                possible_drives.first().unwrap().to_string();
+                                            let is_drive_letter_mounted =
+                                                app.mounted_storages.is_drive_letter_mounted(
+                                                    letter.clone().chars().next().unwrap(),
+                                                );
+                                            if letter != "N/A" && !is_drive_letter_mounted {
+                                                app.mounted_storages.mount(
+                                                    letter.clone(),
+                                                    storage.name.clone(),
+                                                    false,
+                                                    &mut app.app_config,
+                                                );
+                                            } else if letter == "N/A" {
+                                                let possible_drives = available_drives();
+                                                let first_drive = possible_drives.first().unwrap();
+                                                app.app_config.set_drives_letters(
+                                                    storage.name.clone(),
+                                                    *first_drive,
+                                                );
+                                                app.mounted_storages.mount(
+                                                    first_drive.to_string(),
+                                                    storage.name.clone(),
+                                                    false,
+                                                    &mut app.app_config,
+                                                );
+                                            } else {
+                                                app.mounted_storages.mount(
+                                                    letter.clone(),
+                                                    storage.name.clone(),
+                                                    false,
+                                                    &mut app.app_config,
+                                                );
+                                            }
+                                        }
+                                    }
+                                    #[cfg(target_family = "unix")]
+                                    {
+                                        if is_mounted {
+                                            app.mounted_storages.unmount(storage.name.clone());
+                                        } else {
                                             app.mounted_storages.mount(
                                                 app.new_storage_drive_letter.clone(),
                                                 storage.name.clone(),
@@ -128,56 +162,63 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                         }
                                     }
                                 }
-                                #[cfg(target_family = "unix")]
-                                {
-                                    if is_mounted {
-                                        app.mounted_storages.unmount(storage.name.clone());
-                                    } else {
-                                        app.mounted_storages.mount(
-                                            app.new_storage_drive_letter.clone(),
-                                            storage.name.clone(),
-                                            false,
-                                        );
-                                    }
+
+                                let storage_auto_mount = app
+                                    .app_config
+                                    .get_drive_auto_mount(&storage.name.clone())
+                                    .unwrap_or(false);
+                                let auto_mount = ui.add(
+                                    Button::new(if storage_auto_mount { "Yes" } else { "No" })
+                                        .fill(if storage_auto_mount {
+                                            Color32::GREEN
+                                        } else {
+                                            Color32::RED
+                                        })
+                                        .frame(!storage_auto_mount)
+                                        .rounding(Rounding::same(5.)),
+                                );
+                                if auto_mount.clicked() {
+                                    app.app_config.set_drives_auto_mount(
+                                        storage.name.clone(),
+                                        !storage_auto_mount,
+                                    );
                                 }
-                            }
-                            if mount_buttton.secondary_clicked() {
-                                #[cfg(target_os = "windows")]
-                                {
-                                    if is_mounted {
-                                        app.mounted_storages.unmount(storage.name.clone());
-                                    } else {
-                                        let is_already_mounted =
-                                            app.mounted_storages.is_drive_letter_mounted(
-                                                app.new_storage_drive_letter
-                                                    .chars()
-                                                    .next()
-                                                    .unwrap(),
-                                            );
-                                        if app.new_storage_drive_letter != "N/A"
-                                            && !is_already_mounted
-                                        {
-                                            app.mounted_storages.mount(
-                                                app.new_storage_drive_letter.clone(),
-                                                storage.name.clone(),
-                                                true,
-                                            );
-                                        }
-                                    }
-                                }
-                                #[cfg(target_family = "unix")]
-                                {
-                                    if is_mounted {
-                                        app.mounted_storages.unmount(storage.name.clone());
-                                    } else {
-                                        app.mounted_storages.mount(
-                                            app.new_storage_drive_letter.clone(),
-                                            storage.name.clone(),
-                                            true,
-                                        );
-                                    }
-                                }
-                            }
+                            });
+
+                            // if mount_buttton.secondary_clicked() {
+                            //     #[cfg(target_os = "windows")]
+                            //     {
+                            //         if is_mounted {
+                            //             app.mounted_storages.unmount(storage.name.clone());
+                            //         } else {
+                            //             let is_already_mounted =
+                            //                 app.mounted_storages.is_drive_letter_mounted(
+                            //                     letter.clone().chars().next().unwrap(),
+                            //                 );
+                            //             if letter != "N/A" && !is_already_mounted {
+                            //                 app.mounted_storages.mount(
+                            //                     letter,
+                            //                     storage.name.clone(),
+                            //                     true,
+                            //                     &mut app.app_config,
+                            //                 );
+                            //             }
+                            //         }
+                            //     }
+                            //     #[cfg(target_family = "unix")]
+                            //     {
+                            //         if is_mounted {
+                            //             app.mounted_storages.unmount(storage.name.clone());
+                            //         } else {
+                            //             app.mounted_storages.mount(
+                            //                 app.new_storage_drive_letter.clone(),
+                            //                 storage.name.clone(),
+                            //                 true,
+                            //             );
+                            //         }
+                            //     }
+                            // }
+
                             ui.end_row();
                         }
                     });

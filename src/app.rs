@@ -8,7 +8,11 @@ use tray_item::{IconSource, TrayItem};
 #[cfg(target_os = "windows")]
 use crate::utilities::tray_menu::init_tray_menu;
 use crate::{
-    backend::{app_config::AppConfig, mounting::MountingStorage, rclone::Rclone},
+    backend::{
+        app_config::AppConfig,
+        mounting::MountingStorage,
+        rclone::{Rclone, Storage},
+    },
     ui::{
         manage::render_manage, mount_unmount::render_mount_unmount, settings::render_settings,
         top_panel::render_top_panel,
@@ -26,11 +30,10 @@ pub struct RcloneApp {
 
     pub current_tab: Tab,
 
-    pub selected_storage: Option<String>,
+    // pub selected_storage: Option<String>,
     pub new_storage_name: String,
-    pub new_storage_drive_letter: String,
-    pub edit_storage_name: String,
-
+    // pub new_storage_drive_letter: String,
+    // pub edit_storage_name: String,
     is_first_run: bool,
     is_close_requested: bool,
 
@@ -58,11 +61,10 @@ impl RcloneApp {
 
             current_tab: Tab::MountUnmount,
 
-            selected_storage: None,
+            // selected_storage: None,
             new_storage_name: String::new(),
-            new_storage_drive_letter: String::from("N/A"),
-            edit_storage_name: String::new(),
-
+            // new_storage_drive_letter: String::from("N/A"),
+            // edit_storage_name: String::new(),
             is_first_run: true,
             is_close_requested: false,
 
@@ -74,8 +76,12 @@ impl RcloneApp {
 
 impl eframe::App for RcloneApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        // * First run setup
         if self.is_first_run {
             self.is_first_run = false;
+
+            // * Set theme
+            self.app_config.current_theme.set_theme(ctx);
 
             // * Spawn tray menu thread on first run
             #[cfg(target_os = "windows")]
@@ -119,9 +125,46 @@ impl eframe::App for RcloneApp {
                                 ctx_clone_tray.request_repaint();
                             }
                             Err(_) => {
-                                eprintln!("Error receiving message from tray menu");
+                                tracing::error!("Error receiving message from tray menu");
                             }
-                            Ok(Message::RcloneConfigUpdated) => {}
+                            Ok(Message::RcloneConfigUpdated) => {
+                                tracing::info!("Rclone config updated");
+                            }
+                            Ok(Message::MountAll) => {
+                                tx_egui_clone_tray.send(Message::MountAll).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::UnmountAll) => {
+                                tx_egui_clone_tray.send(Message::UnmountAll).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            } // Ok(Message::EnableAutoMount) => {
+                              //     tx_egui_clone_tray.send(Message::EnableAutoMount).unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::DisableAutoMount) => {
+                              //     tx_egui_clone_tray.send(Message::DisableAutoMount).unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::EnableAutoStart) => {
+                              //     tx_egui_clone_tray.send(Message::EnableAutoStart).unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::DisableAutoStart) => {
+                              //     tx_egui_clone_tray.send(Message::DisableAutoStart).unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::MountStorage(name)) => {
+                              //     tx_egui_clone_tray
+                              //         .send(Message::MountStorage(name))
+                              //         .unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
+                              // Ok(Message::UnmountStorage(name)) => {
+                              //     tx_egui_clone_tray
+                              //         .send(Message::UnmountStorage(name))
+                              //         .unwrap();
+                              //     ctx_clone_tray.request_repaint();
+                              // }
                         }
                     }
                 });
@@ -157,11 +200,11 @@ impl eframe::App for RcloneApp {
                                 }
                             }
                             Err(_) => {
-                                eprintln!("Error receiving message from rclone config watcher");
+                                tracing::error!("Error watching rclone config file");
                             }
                         },
                         None => {
-                            eprintln!("Channel closed");
+                            tracing::error!("Error receiving message from rclone config watcher. Channel closed");
                         }
                     }
                 }
@@ -169,8 +212,19 @@ impl eframe::App for RcloneApp {
 
             // * Auto mount drives on startup
             if self.app_config.is_auto_mount {
-                self.mounted_storages
-                    .mount_all(self.rclone.storages.clone());
+                let mut drives: Vec<Storage> = vec![];
+                for storage in self.rclone.storages.clone() {
+                    if let Some(drive) = self.app_config.get_drive_auto_mount(&storage.name) {
+                        if drive {
+                            drives.push(storage.clone())
+                        }
+                    }
+                }
+                self.mounted_storages.mount_all(
+                    drives,
+                    self.app_config.drives_letters.clone(),
+                    self.app_config.enable_network_mode,
+                );
             }
         }
 
@@ -200,6 +254,46 @@ impl eframe::App for RcloneApp {
                 Message::RcloneConfigUpdated => {
                     self.rclone = Rclone::init();
                 }
+                Message::MountAll => {
+                    self.mounted_storages.mount_all(
+                        self.rclone.storages.clone(),
+                        self.app_config.drives_letters.clone(),
+                        self.app_config.enable_network_mode,
+                    );
+                }
+                Message::UnmountAll => {
+                    self.mounted_storages.unmount_all();
+                } // Message::EnableAutoMount => {
+                  //     self.app_config.set_is_auto_mount(true);
+                  // }
+                  // Message::DisableAutoMount => {
+                  //     self.app_config.set_is_auto_mount(false);
+                  // }
+                  // Message::EnableAutoStart => {
+                  //     enable_auto_start_app();
+                  // }
+                  // Message::DisableAutoStart => {
+                  //     disable_auto_start_app();
+                  // }
+                  // Message::MountStorage(name) => {
+                  //     let mut letter = self
+                  //         .app_config
+                  //         .get_drive_letter(&name)
+                  //         .unwrap_or("N/A".to_string());
+                  //     if letter == "N/A" {
+                  //         let possible = available_drives();
+                  //         letter = possible.first().unwrap().to_string();
+                  //     }
+                  //     self.mounted_storages.mount(
+                  //         letter.clone(),
+                  //         name,
+                  //         false,
+                  //         &mut self.app_config,
+                  //     );
+                  // }
+                  // Message::UnmountStorage(name) => {
+                  //     self.mounted_storages.unmount(name);
+                  // }
             }
         }
 
@@ -219,7 +313,7 @@ impl eframe::App for RcloneApp {
         match self.mounted_storages.unmount_all() {
             true => true,
             false => {
-                eprintln!("Failed to unmount all drives");
+                tracing::error!("Failed to unmount all drives");
                 false
             }
         }
@@ -228,7 +322,7 @@ impl eframe::App for RcloneApp {
             true => match self.mounted_storages.unmount_all() {
                 true => true,
                 false => {
-                    eprintln!("Failed to unmount all drives");
+                    tracing::error!("Failed to unmount all drives");
                     self.is_close_requested = false;
                     false
                 }
@@ -243,7 +337,7 @@ impl eframe::App for RcloneApp {
         match self.mounted_storages.unmount_all() {
             true => true,
             false => {
-                eprintln!("Failed to unmount all drives");
+                tracing::error!("Failed to unmount all drives");
                 false
             }
         }

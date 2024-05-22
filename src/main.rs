@@ -10,6 +10,7 @@ use std::{
 use drive_af::RcloneApp;
 use eframe::IconData;
 use tokio::runtime::Runtime;
+use tracing::level_filters::LevelFilter;
 use tracing_subscriber::fmt::time::ChronoLocal;
 
 #[cfg(target_os = "windows")]
@@ -26,11 +27,11 @@ fn main() {
         .to_str()
         .unwrap()
         .to_owned()
-        + "/drive_af/logs";
+        + "/drive_af";
 
     #[cfg(not(target_os = "windows"))]
     let dir = format!(
-        "/{}/{}/Documents/drive_af/logs",
+        "/{}/{}/Documents/drive_af",
         if cfg!(target_os = "linux") {
             "home"
         } else {
@@ -43,7 +44,7 @@ fn main() {
         create_dir_all(&dir).unwrap();
     }
 
-    let file_appender = tracing_appender::rolling::never(dir, "drive_af_logs.log");
+    let file_appender = tracing_appender::rolling::never(dir, "drive_af.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
     let timer = ChronoLocal::new("%m/%d/%YT%H:%M:%S".to_owned());
@@ -57,6 +58,7 @@ fn main() {
         .with_timer(timer)
         .with_writer(std::io::stderr)
         .with_writer(non_blocking)
+        .with_max_level(LevelFilter::WARN)
         .init();
 
     match machine_uid::get() {
@@ -83,16 +85,17 @@ fn main() {
         let _enter = rt.enter();
 
         let app = RcloneApp::default();
+        let min_size = egui::Vec2::new(490., 292.5);
 
         let native_options = eframe::NativeOptions {
             centered: true,
             decorated: true,
             transparent: false,
-            resizable: false,
-            min_window_size: Some(egui::Vec2::new(430.0, 250.0)),
-            initial_window_size: Some(egui::Vec2::new(430.0, 250.0)),
+            resizable: true,
+            min_window_size: Some(min_size),
+            initial_window_size: Some(min_size),
             icon_data: Some(
-                IconData::try_from_png_bytes(include_bytes!("../assets/DriveAF-nobg.png")).unwrap(),
+                IconData::try_from_png_bytes(include_bytes!("../assets/driveaf.png")).unwrap(),
             ),
             ..Default::default()
         };

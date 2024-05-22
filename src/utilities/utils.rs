@@ -22,10 +22,10 @@ pub fn check_if_mounted(_name: String) {
     match process {
         Ok(result) => {
             let output = String::from_utf8_lossy(&result.stdout);
-            println!("{}", output);
+            tracing::info!("{}", output);
         }
         Err(err) => {
-            println!("{}", err);
+            tracing::error!("{}", err);
         }
     }
 }
@@ -45,7 +45,7 @@ pub fn get_info(name: String) -> Result<String, String> {
             Ok(output.to_string())
         }
         Err(err) => {
-            eprintln!("Error while getting storage {} about info", name);
+            tracing::error!("Error while getting storage {} about info", name);
             Err(err.to_string())
         }
     }
@@ -76,13 +76,11 @@ pub fn unmount_delete_directory(name: String) {
 }
 
 pub fn enable_auto_mount(app: &mut RcloneApp) {
-    app.app_config.is_auto_mount = true;
-    app.app_config.save();
+    app.app_config.set_is_auto_mount(true);
 }
 
 pub fn disable_auto_mount(app: &mut RcloneApp) {
-    app.app_config.is_auto_mount = false;
-    app.app_config.save();
+    app.app_config.set_is_auto_mount(false);
 }
 
 pub fn enable_auto_start_app() {
@@ -153,7 +151,7 @@ pub fn rclone_config_path() -> Option<PathBuf> {
 
 pub fn app_config_path() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
-    return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("rclone_app"));
+    return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("drive_af"));
     #[cfg(not(target_os = "windows"))]
     if cfg!(target_os = "linux") {
         Some(PathBuf::from(format!(
@@ -170,6 +168,7 @@ pub fn app_config_path() -> Option<PathBuf> {
     }
 }
 
+// Google Drive
 pub fn add_google_drive_storage(name: String) {
     tokio::spawn(async move {
         let mut cmd = Command::new("rclone");
@@ -178,8 +177,7 @@ pub fn add_google_drive_storage(name: String) {
             String::from("create"),
             name.trim().to_string(),
             String::from("drive"),
-            String::from("config_is_local"),
-            String::from("true"),
+            String::from("config_is_local=true"),
         ]);
 
         #[cfg(target_os = "windows")]
@@ -189,6 +187,7 @@ pub fn add_google_drive_storage(name: String) {
     });
 }
 
+// OneDrive
 pub fn add_onedrive_storage(name: String) {
     tokio::spawn(async move {
         let mut cmd = Command::new("rclone");
@@ -197,8 +196,64 @@ pub fn add_onedrive_storage(name: String) {
             String::from("create"),
             name.trim().to_string(),
             String::from("onedrive"),
-            String::from("config_is_local"),
-            String::from("true"),
+            String::from("config_is_local=true"),
+        ]);
+
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        cmd.spawn().unwrap();
+    });
+}
+
+// Dropbox
+pub fn add_dropbox_storage(name: String) {
+    tokio::spawn(async move {
+        let mut cmd = Command::new("rclone");
+        let cmd = cmd.args(&[
+            String::from("config"),
+            String::from("create"),
+            name.trim().to_string(),
+            String::from("dropbox"),
+            String::from("config_is_local=true"),
+        ]);
+
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        cmd.spawn().unwrap();
+    });
+}
+
+// Google Photos
+pub fn add_google_photos_storage(name: String) {
+    tokio::spawn(async move {
+        let mut cmd = Command::new("rclone");
+        let cmd = cmd.args(&[
+            String::from("config"),
+            String::from("create"),
+            name.trim().to_string(),
+            String::from("googlephotos"),
+            String::from("config_is_local=true"),
+        ]);
+
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        cmd.spawn().unwrap();
+    });
+}
+
+// Mega
+pub fn add_mega_storage(name: String) {
+    tokio::spawn(async move {
+        let mut cmd = Command::new("rclone");
+        let cmd = cmd.args(&[
+            String::from("config"),
+            String::from("create"),
+            name.trim().to_string(),
+            String::from("mega"),
+            String::from("config_is_local=true"),
         ]);
 
         #[cfg(target_os = "windows")]

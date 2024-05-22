@@ -1,6 +1,15 @@
-use egui::{Button, CentralPanel, Context, ScrollArea};
+use egui::{vec2, Button, CentralPanel, Context, Rounding, ScrollArea};
 
-use crate::{utilities::utils::{is_app_auto_start, disable_auto_start_app, enable_auto_start_app, enable_auto_mount, disable_auto_mount}, RcloneApp};
+use crate::{
+    utilities::{
+        enums::AppTheme,
+        utils::{
+            disable_auto_mount, disable_auto_start_app, enable_auto_mount, enable_auto_start_app,
+            is_app_auto_start,
+        },
+    },
+    RcloneApp,
+};
 
 pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
     CentralPanel::default().show(ctx, |ui| {
@@ -33,16 +42,38 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
 
                 ui.horizontal(|ui| {
                     ui.label("Theme mode:");
-                    let mut visuals = ui.ctx().style().visuals.clone();
-                    visuals.light_dark_radio_buttons(ui);
-                    ui.ctx().set_visuals(visuals);
+
+                    for theme in AppTheme::values() {
+                        let response = ui.add_sized(
+                            vec2(50.0, 20.0),
+                            Button::new(theme.name())
+                                .fill(if app.app_config.current_theme == theme {
+                                    theme.get_highlight_color()
+                                } else {
+                                    Default::default()
+                                })
+                                .rounding(Rounding::same(5.)),
+                        );
+                        // ui.selectable_value(
+                        //     &mut app.app_config.current_theme,
+                        //     theme,
+                        //     theme.name().to_string(),
+                        // );
+                        if response.clicked() {
+                            theme.set_theme(ctx);
+                            app.app_config.set_current_theme(theme);
+                        }
+                    }
                 });
 
                 ui.add_space(8.0);
 
                 ui.horizontal(|ui| {
-                    ui.label("Auto start:");
                     let is_auto_start = is_app_auto_start();
+                    ui.label(format!(
+                        "Auto start is {}",
+                        if is_auto_start { "enabled" } else { "disabled" }
+                    ));
                     if ui
                         .add(Button::new(if is_auto_start {
                             "Disable"
@@ -62,8 +93,11 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                 ui.add_space(8.0);
 
                 ui.horizontal(|ui| {
-                    ui.label("Auto mount:");
                     let is_auto_mount = app.app_config.is_auto_mount;
+                    ui.label(format!(
+                        "Auto mount is {}",
+                        if is_auto_mount { "enabled" } else { "disabled" }
+                    ));
                     if ui
                         .add(Button::new(if is_auto_mount {
                             "Disable"
@@ -79,6 +113,52 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                         }
                     }
                 });
+
+                ui.add_space(8.0);
+
+                ui.horizontal(|ui| {
+                    let is_hide_storage_label = app.app_config.hide_storage_label;
+                    ui.label(format!(
+                        "Labels are {}",
+                        if is_hide_storage_label {
+                            "hidden"
+                        } else {
+                            "visible"
+                        }
+                    ));
+                    if ui
+                        .add(Button::new(if is_hide_storage_label {
+                            "Disable"
+                        } else {
+                            "Enable"
+                        }))
+                        .clicked()
+                    {
+                        app.app_config
+                            .set_hide_storage_label(!is_hide_storage_label);
+                    }
+                });
+
+                // ui.add_space(8.0);
+
+                // ui.horizontal(|ui| {
+                //     let is_network_mode = app.app_config.enable_network_mode;
+                //     ui.label(format!(
+                //         "Network mode is {} (Windows only)",
+                //         if is_network_mode { "enabled" } else { "disabled" }
+                //     ));
+                //     if ui
+                //         .add(Button::new(if is_network_mode {
+                //             "Disable"
+                //         } else {
+                //             "Enable"
+                //         }))
+                //         .clicked()
+                //     {
+                //         app.app_config
+                //             .set_enable_network_mode(!is_network_mode);
+                //     }
+                // });
             });
     });
 }

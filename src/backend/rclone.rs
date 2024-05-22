@@ -1,19 +1,21 @@
 use chrono::{DateTime, FixedOffset};
 use serde_json::Value;
+
 #[cfg(target_os = "windows")]
-use std::os::windows::process::CommandExt;
+use {std::os::windows::process::CommandExt, winapi::um::winbase};
+
 use std::{
     fs::OpenOptions,
     io::{BufRead, BufReader, Write},
     process::Command,
 };
 
-#[cfg(target_os = "windows")]
-use winapi::um::winbase;
-
 use crate::utilities::{
     enums::StorageType,
-    utils::{add_google_drive_storage, add_onedrive_storage, app_config_path, rclone_config_path},
+    utils::{
+        add_dropbox_storage, add_google_drive_storage, add_google_photos_storage,
+        add_onedrive_storage, app_config_path, rclone_config_path,
+    },
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -172,6 +174,9 @@ impl Rclone {
         match storage_type {
             StorageType::GoogleDrive => add_google_drive_storage(name),
             StorageType::OneDrive => add_onedrive_storage(name),
+            StorageType::Dropbox => add_dropbox_storage(name),
+            StorageType::GooglePhotos => add_google_photos_storage(name),
+            // StorageType::Mega => add_mega_storage(name),
         }
     }
 

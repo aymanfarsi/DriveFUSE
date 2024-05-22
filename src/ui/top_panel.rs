@@ -1,4 +1,4 @@
-use egui::{menu, Align, Context, Layout, RichText, TextStyle, TopBottomPanel};
+use egui::{menu, vec2, Align, Button, Context, Layout, RichText, TextStyle, TopBottomPanel};
 
 use crate::{
     utilities::enums::{Message, Tab},
@@ -12,15 +12,20 @@ pub fn render_top_panel(ctx: &Context, app: &mut RcloneApp) {
             ui.visuals_mut().button_frame = false;
             menu::bar(ui, |ui| {
                 ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                    let label = ui.label(
-                        RichText::new(app.mounted_storages.total_mounted().to_string())
-                            .size(14.)
-                            .strong(),
+                    let text = format!(
+                        "{}/{}",
+                        app.mounted_storages.total_mounted(),
+                        app.rclone.storages.len()
                     );
+                    let label = ui.label(RichText::new(text).size(14.).strong());
                     label.context_menu(|ui| {
                         if ui.button("Mount all").clicked() {
                             app.mounted_storages.unmount_all();
-                            app.mounted_storages.mount_all(app.rclone.storages.clone());
+                            app.mounted_storages.mount_all(
+                                app.rclone.storages.clone(),
+                                app.app_config.drives_letters.clone(),
+                                app.app_config.enable_network_mode,
+                            );
                             ui.close_menu();
                         }
                         if ui.button("Unmount all").clicked() {
@@ -45,7 +50,21 @@ pub fn render_top_panel(ctx: &Context, app: &mut RcloneApp) {
                             app.current_tab = tab;
                         }
                     }
-                    ui.add_space(3.);
+
+                    let available_space = ui.available_width();
+                    ui.add_space(available_space - 50.);
+
+                    let hide_btn = ui.add_sized(
+                        vec2(50., 20.),
+                        Button::new(if app.app_config.hide_storage_label {
+                            "Show"
+                        } else {
+                            "Hide"
+                        }),
+                    );
+                    if hide_btn.clicked() {
+                        app.app_config.hide_storage_label = !app.app_config.hide_storage_label;
+                    }
                 });
             });
         });

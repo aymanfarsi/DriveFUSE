@@ -13,11 +13,10 @@ Comment=DriveAF storage mounter
 Exec=/home/evildave/dev/drive_af/target/release/drive_af
 
 # The name of the icon that will be used to display this entry
-Icon=/home/evildave/dev/drive_af/assets/DriveAF-nobg.png
+Icon=/home/evildave/dev/drive_af/assets/driveaf.png
 
 # Describes whether this application needs to be run in a terminal or not
 Terminal=false
 
 # Describes the categories in which this entry should be shown
-# Categories=Utilities
-
+Categories=Utility;Application;

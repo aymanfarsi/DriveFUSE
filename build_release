@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [[ $(uname -s) == *NT* ]]; then
+    # Windows specific code
+    echo "Building for Windows"
+elif [[ $(uname -s) == *Darwin* ]]; then
+    # Mac specific code
+    echo "Building for Mac"
+else
+    # Linux specific code
+    echo "Building for Linux"
+fi
+
+# cargo build --release
+
+echo "Bundle the app"
+cargo bundle --release
