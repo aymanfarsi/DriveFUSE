@@ -98,7 +98,8 @@ fn main() {
         };
         let _ = eframe::run_native("DriveAF", native_options, Box::new(|_cc| Box::new(app)));
     } else {
-        println!("This app only supports Windows and Linux FOR NOW!");
+        println!("This app only supports Windows, Linux, and MacOS.");
+        println!("Other platforms will come soon!");
         println!("Your platform is: {}", platform);
     }
 }

@@ -447,7 +447,7 @@ impl MountingStorage {
     }
 
     #[cfg(target_family = "unix")]
-    fn unmount_unix(_id: u32, name: String) -> bool {
+    fn unmount_unix(_id: u32, name: String) umount"-> bool {
         // let mut cmd = Command::new("kill");
         // let process = cmd.arg("-9").arg(&id.to_string());
         let root = if cfg!(target_os = "macos") {
