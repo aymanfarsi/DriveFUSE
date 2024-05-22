@@ -77,8 +77,8 @@ impl MountingStorage {
     pub fn mount_all(
         &mut self,
         drives: Vec<Storage>,
-        drives_letters: HashMap<String, char>,
-        network_mode: bool,
+        _drives_letters: HashMap<String, char>,
+        _network_mode: bool,
     ) -> bool {
         #[cfg(target_os = "windows")]
         {
@@ -86,9 +86,9 @@ impl MountingStorage {
             // let mut available_drives = available_drives();
             for drive in drives {
                 // let next_drive = available_drives.first().unwrap().to_string();
-                let letter = drives_letters.get(&drive.name).unwrap().to_string();
+                let letter = _drives_letters.get(&drive.name).unwrap().to_string();
                 let id =
-                    Self::mount_windows(drive.name.clone(), letter.clone(), false, network_mode);
+                    Self::mount_windows(drive.name.clone(), letter.clone(), false, _network_mode);
                 match id {
                     Some(id) => {
                         // available_drives.remove(0);
@@ -209,29 +209,29 @@ impl MountingStorage {
 
     pub fn mount(
         &mut self,
-        driver_letter: String,
+        _driver_letter: String,
         name: String,
         _show_terminal: bool,
-        app_config: &mut AppConfig,
+        _app_config: &mut AppConfig,
     ) {
         #[cfg(target_os = "windows")]
         {
             let id = Self::mount_windows(
                 name.clone(),
-                driver_letter.clone(),
+                _driver_letter.clone(),
                 _show_terminal,
-                app_config.enable_network_mode,
+                _app_config.enable_network_mode,
             );
             match id {
                 Some(id) => {
-                    tracing::info!("Mounted {} to {}", name, driver_letter);
+                    tracing::info!("Mounted {} to {}", name, _driver_letter);
                     self.drives.insert(name.clone(), id);
                     self.mounted
-                        .insert(name.clone(), driver_letter.chars().next().unwrap());
-                    app_config.set_drives_letters(name, driver_letter.chars().next().unwrap());
+                        .insert(name.clone(), _driver_letter.chars().next().unwrap());
+                    _app_config.set_drives_letters(name, _driver_letter.chars().next().unwrap());
                 }
                 None => {
-                    tracing::error!("Failed to mount {} to {}", name, driver_letter);
+                    tracing::error!("Failed to mount {} to {}", name, _driver_letter);
                 }
             }
         }
@@ -473,7 +473,7 @@ impl MountingStorage {
     }
 
     #[cfg(target_family = "unix")]
-    fn unmount_unix(_id: u32, name: String) umount"-> bool {
+    fn unmount_unix(_id: u32, name: String) -> bool {
         // let mut cmd = Command::new("kill");
         // let process = cmd.arg("-9").arg(&id.to_string());
         let root = if cfg!(target_os = "macos") {

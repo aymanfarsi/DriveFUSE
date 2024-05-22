@@ -155,12 +155,12 @@ pub fn app_config_path() -> Option<PathBuf> {
     #[cfg(not(target_os = "windows"))]
     if cfg!(target_os = "linux") {
         Some(PathBuf::from(format!(
-            "/home/{}/.config/rclone_app",
+            "/home/{}/.config/drive_af",
             whoami::username()
         )))
     } else if cfg!(target_os = "macos") {
         Some(PathBuf::from(format!(
-            "/Users/{}/.config/rclone_app",
+            "/Users/{}/.config/drive_af",
             whoami::username()
         )))
     } else {

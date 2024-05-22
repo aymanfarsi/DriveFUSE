@@ -63,6 +63,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                             });
                             ui.label(drive_type);
                             ui.label(status_text);
+                            #[cfg(target_os = "windows")]
                             let letter = app
                                 .app_config
                                 .get_drive_letter(&storage.name.clone())
@@ -155,9 +156,10 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                             app.mounted_storages.unmount(storage.name.clone());
                                         } else {
                                             app.mounted_storages.mount(
-                                                app.new_storage_drive_letter.clone(),
+                                                String::from("N/A"),
                                                 storage.name.clone(),
                                                 false,
+                                                &mut app.app_config,
                                             );
                                         }
                                     }
