@@ -67,7 +67,8 @@ eframe = { version = "0.22.0", default-features = false, features = [
     "wayland",
     "glow",
 ] }
-tray-item = { version = "0.10.0", features = ["libappindicator"] }
+tray-item = { version = "0.10.0", features = ["ksni"] }
+png = "0.17.13"
 whoami = "1.4.1"
 
 # macos dependencies
