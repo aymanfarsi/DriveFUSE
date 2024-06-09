@@ -6,13 +6,7 @@ edition = "2021"
 rust-version = "1.70"
 build = "build.rs"
 description = "A cross-platform cloud storage mounter."
-
-[package.metadata.bundle]
-name = "DriveFUSE"
-identifier = "io.github.aymanfarsi.drive_fuse"
-icon = ["assets/*.ico"]
-short_description = "A cross-platform cloud storage mounter."
-long_description = "DriveFUSE is a cross-platform cloud storage mounter that allows you to mount your cloud storage as a local drive on your computer. It supports multiple cloud storage providers and allows you to mount multiple drives at the same time."
+license = "MIT"
 
 [dependencies]
 # gui
@@ -71,6 +65,3 @@ eframe = { version = "0.22.0", default-features = false, features = [
 ] }
 tray-item = "0.10.0"
 whoami = "1.4.1"
-
-[package.metadata.packager]
-before-packaging-command = "cargo build --release"

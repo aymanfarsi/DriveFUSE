@@ -95,6 +95,8 @@ DriveFUSE is built and relies on the following technologies:
 - [WinFsp](https://winfsp.dev/): A Windows File System Proxy that allows you to create user mode file systems.
 - [fusermount3](https://www.man7.org/linux/man-pages/man1/fusermount3.1.html): A program to mount and unmount FUSE filesystems.
 
+> Thanks to [Chimezie Chima-Uzoka](https://www.chichima.org/) for the logo.
+
 ## License
 
 DriveFUSE is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
