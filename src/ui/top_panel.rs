@@ -1,11 +1,8 @@
-use egui::{menu, vec2, Align, Button, Context, Layout, RichText, TextStyle, TopBottomPanel};
+use egui::{menu, vec2, Align, Button, Layout, RichText, TextStyle, TopBottomPanel};
 
-use crate::{
-    utilities::enums::{Message, Tab},
-    RcloneApp,
-};
+use crate::{utilities::enums::Tab, RcloneApp};
 
-pub fn render_top_panel(ctx: &Context, app: &mut RcloneApp) {
+pub fn render_top_panel(ctx: &egui::Context, app: &mut RcloneApp) {
     TopBottomPanel::top("top_panel").show(ctx, |ui| {
         ui.add_space(3.);
         ui.horizontal_wrapped(|ui| {
@@ -17,27 +14,8 @@ pub fn render_top_panel(ctx: &Context, app: &mut RcloneApp) {
                         app.mounted_storages.total_mounted(),
                         app.rclone.storages.len()
                     );
-                    let label = ui.label(RichText::new(text).size(14.).strong());
-                    label.context_menu(|ui| {
-                        if ui.button("Mount all").clicked() {
-                            app.mounted_storages.unmount_all();
-                            app.mounted_storages.mount_all(
-                                app.rclone.storages.clone(),
-                                app.app_config.drives_letters.clone(),
-                                app.app_config.enable_network_mode,
-                            );
-                            ui.close_menu();
-                        }
-                        if ui.button("Unmount all").clicked() {
-                            app.mounted_storages.unmount_all();
-                            ui.close_menu();
-                        }
-                        ui.separator();
-                        if ui.button("Quit").clicked() {
-                            app.tx_egui.send(Message::Quit).unwrap();
-                            ui.close_menu();
-                        }
-                    });
+                    ui.label(RichText::new(text).size(14.).strong());
+
                     ui.add_space(3.);
                     for tab in Tab::values() {
                         let btn = ui.selectable_label(

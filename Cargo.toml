@@ -1,6 +1,6 @@
 [package]
 name = "drive_fuse"
-version = "0.7.5"
+version = "0.10.0"
 authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
 rust-version = "1.70"
@@ -17,23 +17,18 @@ long_description = "DriveFUSE is a cross-platform cloud storage mounter that all
 [dependencies]
 # gui
 egui = "0.22.0"
-catppuccin-egui = { version = "3.1"}
+catppuccin-egui = "3.1.0"
 
 # filesystem
-directories = "5.0"
+directories = "5.0.1"
 notify = "6.1.1"
 rfd = "0.14.1"
 chrono = "0.4.31"
 serde = { version = "1.0.190", features = ["derive"] }
-serde_json = { version = "1.0.108" }
+serde_json = "1.0.108"
 
 # misc
-tokio = { version = "1.33.0", features = [
-    "sync",
-    "rt",
-    "rt-multi-thread",
-    "time",
-] }
+tokio = { version = "1.33.0", features = ["rt", "rt-multi-thread", "sync"] }
 rand = "0.8.5"
 auto-launch = "0.5.0"
 machine-uid = "0.5.1"
@@ -47,7 +42,6 @@ tracing-subscriber = { version = "0.3.18", features = [
 ] }
 tracing-appender = "0.2.3"
 
-# windows dependencies
 [target.'cfg(windows)'.dependencies]
 eframe = { version = "0.22.0", default-features = false, features = [
     "default_fonts",
@@ -60,7 +54,6 @@ tray-item = "0.10.0"
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.12"
 
-# linux dependencies
 [target.'cfg(target_os = "linux")'.dependencies]
 eframe = { version = "0.22.0", default-features = false, features = [
     "default_fonts",
@@ -71,7 +64,6 @@ tray-item = { version = "0.10.0", features = ["ksni"] }
 png = "0.17.13"
 whoami = "1.4.1"
 
-# macos dependencies
 [target.'cfg(target_os = "macos")'.dependencies]
 eframe = { version = "0.22.0", default-features = false, features = [
     "default_fonts",

@@ -2,6 +2,7 @@ use std::sync::mpsc::{Receiver, SyncSender};
 
 use eframe::egui;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
+use tokio::sync::mpsc;
 
 #[cfg(any(target_os = "windows", target_os = "linux"))]
 use {
@@ -207,10 +208,10 @@ impl eframe::App for RcloneApp {
             let tx_egui_clone_config = self.tx_egui.clone();
             let ctx_clone_config = ctx.clone();
             tokio::spawn(async move {
-                let (tx_temp, mut rx_temp) = tokio::sync::mpsc::channel(1);
+                let (tx_temp, mut rx_temp) = mpsc::unbounded_channel();
                 let mut watcher: RecommendedWatcher = RecommendedWatcher::new(
                     move |res| {
-                        tx_temp.blocking_send(res).unwrap();
+                        tx_temp.send(res).unwrap();
                     },
                     Config::default(),
                 )
