@@ -8,6 +8,6 @@ else
     echo "Building for Linux"
     cargo build --release
     echo "Copying .desktop file to applications folder"
-    cp assets/drive_af.desktop $HOME/.local/share/applications/
+    cp assets/drive_fuse.desktop $HOME/.local/share/applications/
     echo "Everything is ready"
 fi
