@@ -11,7 +11,24 @@ use directories::{BaseDirs, UserDirs};
 #[cfg(target_os = "windows")]
 use {std::os::windows::process::CommandExt, winapi::um::winbase, windows::Win32};
 
+#[cfg(target_os = "linux")]
+use {std::io::Cursor, tray_item::IconSource};
+
 use crate::RcloneApp;
+
+#[cfg(target_os = "linux")]
+pub fn create_linux_tray_icon(bytes: &[u8]) -> IconSource {
+    let cursor = Cursor::new(bytes);
+    let decoder = png::Decoder::new(cursor);
+    let mut reader = decoder.read_info().unwrap();
+    let mut buf = vec![0; reader.output_buffer_size()];
+    reader.next_frame(&mut buf).unwrap();
+    IconSource::Data {
+        data: buf,
+        height: 32,
+        width: 32,
+    }
+}
 
 #[cfg(target_family = "unix")]
 pub fn check_if_mounted(_name: String) {

@@ -2,11 +2,10 @@ use std::sync::mpsc::{Receiver, SyncSender};
 
 use eframe::egui;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
-#[cfg(target_os = "windows")]
-use tray_item::{IconSource, TrayItem};
 
-#[cfg(target_os = "windows")]
-use crate::utilities::tray_menu::init_tray_menu;
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+use {crate::utilities::tray_menu::init_tray_menu, tray_item::TrayItem};
+
 use crate::{
     backend::{
         app_config::AppConfig,
@@ -19,7 +18,7 @@ use crate::{
     },
     utilities::{
         enums::{Message, Tab},
-        utils::rclone_config_path,
+        utils::{create_linux_tray_icon, rclone_config_path},
     },
 };
 
@@ -102,6 +101,73 @@ impl eframe::App for RcloneApp {
                             Ok(Message::Icon) => {
                                 tray.set_icon(IconSource::Resource("app-icon")).unwrap();
                                 tx_egui_clone_tray.send(Message::Icon).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::ShowApp) => {
+                                tx_egui_clone_tray.send(Message::ShowApp).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::HideApp) => {
+                                tx_egui_clone_tray.send(Message::HideApp).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Err(_) => {
+                                tracing::error!("Error receiving message from tray menu");
+                            }
+                            Ok(Message::RcloneConfigUpdated) => {
+                                tracing::info!("Rclone config updated");
+                            }
+                            Ok(Message::MountAll) => {
+                                tx_egui_clone_tray.send(Message::MountAll).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::UnmountAll) => {
+                                tx_egui_clone_tray.send(Message::UnmountAll).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                        }
+                    }
+                });
+            }
+            #[cfg(target_os = "linux")]
+            {
+                let tx_egui_clone_tray = self.tx_egui.clone();
+                let ctx_clone_tray = ctx.clone();
+                tokio::spawn(async move {
+                    let app_icon = create_linux_tray_icon(include_bytes!("../assets/driveaf.png"));
+
+                    let mut tray = TrayItem::new("DriveAF Tray", app_icon).unwrap();
+                    let rx_tray = init_tray_menu(&mut tray);
+                    loop {
+                        match rx_tray.recv() {
+                            Ok(Message::Quit) => {
+                                tx_egui_clone_tray.send(Message::ShowApp).unwrap();
+                                ctx_clone_tray.request_repaint();
+                                tx_egui_clone_tray.send(Message::Quit).unwrap();
+                                ctx_clone_tray.request_repaint();
+                                break;
+                            }
+                            Ok(Message::Icon) => {
+                                let app_icon =
+                                    create_linux_tray_icon(include_bytes!("../assets/driveaf.png"));
+                                tray.set_icon(app_icon).unwrap();
+                                tx_egui_clone_tray.send(Message::Icon).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::Red) => {
+                                let red_icon = create_linux_tray_icon(include_bytes!(
+                                    "../assets/icon-red.ico"
+                                ));
+                                tray.set_icon(red_icon).unwrap();
+                                tx_egui_clone_tray.send(Message::Red).unwrap();
+                                ctx_clone_tray.request_repaint();
+                            }
+                            Ok(Message::Green) => {
+                                let green_icon = create_linux_tray_icon(include_bytes!(
+                                    "../assets/icon-green.ico"
+                                ));
+                                tray.set_icon(green_icon).unwrap();
+                                tx_egui_clone_tray.send(Message::Green).unwrap();
                                 ctx_clone_tray.request_repaint();
                             }
                             Ok(Message::ShowApp) => {
@@ -235,13 +301,22 @@ impl eframe::App for RcloneApp {
 
     fn on_close_event(&mut self) -> bool {
         #[cfg(target_os = "linux")]
-        match self.mounted_storages.unmount_all() {
-            true => true,
+        match self.is_close_requested {
+            true => match self.mounted_storages.unmount_all() {
+                true => true,
+                false => {
+                    tracing::error!("Failed to unmount all drives");
+                    self.is_close_requested = false;
+                    false
+                }
+            },
             false => {
-                tracing::error!("Failed to unmount all drives");
+                self.tx_egui.send(Message::HideApp).unwrap();
+                self.is_close_requested = false;
                 false
             }
         }
+
         #[cfg(target_os = "windows")]
         match self.is_close_requested {
             true => match self.mounted_storages.unmount_all() {
