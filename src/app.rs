@@ -30,10 +30,8 @@ pub struct RcloneApp {
 
     pub current_tab: Tab,
 
-    // pub selected_storage: Option<String>,
     pub new_storage_name: String,
-    // pub new_storage_drive_letter: String,
-    // pub edit_storage_name: String,
+    
     is_first_run: bool,
     is_close_requested: bool,
 
@@ -90,7 +88,7 @@ impl eframe::App for RcloneApp {
                 let ctx_clone_tray = ctx.clone();
                 tokio::spawn(async move {
                     let icon = IconSource::Resource("app-icon");
-                    let mut tray = TrayItem::new("DriveAF Tray", icon).unwrap();
+                    let mut tray = TrayItem::new("DriveFUSE Tray", icon).unwrap();
                     let rx_tray = init_tray_menu(&mut tray);
                     loop {
                         match rx_tray.recv() {
@@ -104,16 +102,6 @@ impl eframe::App for RcloneApp {
                             Ok(Message::Icon) => {
                                 tray.set_icon(IconSource::Resource("app-icon")).unwrap();
                                 tx_egui_clone_tray.send(Message::Icon).unwrap();
-                                ctx_clone_tray.request_repaint();
-                            }
-                            Ok(Message::Red) => {
-                                tray.set_icon(IconSource::Resource("red-icon")).unwrap();
-                                tx_egui_clone_tray.send(Message::Red).unwrap();
-                                ctx_clone_tray.request_repaint();
-                            }
-                            Ok(Message::Green) => {
-                                tx_egui_clone_tray.send(Message::Green).unwrap();
-                                tray.set_icon(IconSource::Resource("green-icon")).unwrap();
                                 ctx_clone_tray.request_repaint();
                             }
                             Ok(Message::ShowApp) => {
@@ -137,34 +125,7 @@ impl eframe::App for RcloneApp {
                             Ok(Message::UnmountAll) => {
                                 tx_egui_clone_tray.send(Message::UnmountAll).unwrap();
                                 ctx_clone_tray.request_repaint();
-                            } // Ok(Message::EnableAutoMount) => {
-                              //     tx_egui_clone_tray.send(Message::EnableAutoMount).unwrap();
-                              //     ctx_clone_tray.request_repaint();
-                              // }
-                              // Ok(Message::DisableAutoMount) => {
-                              //     tx_egui_clone_tray.send(Message::DisableAutoMount).unwrap();
-                              //     ctx_clone_tray.request_repaint();
-                              // }
-                              // Ok(Message::EnableAutoStart) => {
-                              //     tx_egui_clone_tray.send(Message::EnableAutoStart).unwrap();
-                              //     ctx_clone_tray.request_repaint();
-                              // }
-                              // Ok(Message::DisableAutoStart) => {
-                              //     tx_egui_clone_tray.send(Message::DisableAutoStart).unwrap();
-                              //     ctx_clone_tray.request_repaint();
-                              // }
-                              // Ok(Message::MountStorage(name)) => {
-                              //     tx_egui_clone_tray
-                              //         .send(Message::MountStorage(name))
-                              //         .unwrap();
-                              //     ctx_clone_tray.request_repaint();
-                              // }
-                              // Ok(Message::UnmountStorage(name)) => {
-                              //     tx_egui_clone_tray
-                              //         .send(Message::UnmountStorage(name))
-                              //         .unwrap();
-                              //     ctx_clone_tray.request_repaint();
-                              // }
+                            }
                         }
                     }
                 });
@@ -237,13 +198,7 @@ impl eframe::App for RcloneApp {
                     frame.close();
                 }
                 Message::Icon => {
-                    frame.set_window_title("DriveAF");
-                }
-                Message::Red => {
-                    frame.set_window_title("RcloneApp - Red");
-                }
-                Message::Green => {
-                    frame.set_window_title("RcloneApp - Green");
+                    frame.set_window_title("DriveFUSE");
                 }
                 Message::ShowApp => {
                     frame.set_visible(true);
@@ -263,37 +218,7 @@ impl eframe::App for RcloneApp {
                 }
                 Message::UnmountAll => {
                     self.mounted_storages.unmount_all();
-                } // Message::EnableAutoMount => {
-                  //     self.app_config.set_is_auto_mount(true);
-                  // }
-                  // Message::DisableAutoMount => {
-                  //     self.app_config.set_is_auto_mount(false);
-                  // }
-                  // Message::EnableAutoStart => {
-                  //     enable_auto_start_app();
-                  // }
-                  // Message::DisableAutoStart => {
-                  //     disable_auto_start_app();
-                  // }
-                  // Message::MountStorage(name) => {
-                  //     let mut letter = self
-                  //         .app_config
-                  //         .get_drive_letter(&name)
-                  //         .unwrap_or("N/A".to_string());
-                  //     if letter == "N/A" {
-                  //         let possible = available_drives();
-                  //         letter = possible.first().unwrap().to_string();
-                  //     }
-                  //     self.mounted_storages.mount(
-                  //         letter.clone(),
-                  //         name,
-                  //         false,
-                  //         &mut self.app_config,
-                  //     );
-                  // }
-                  // Message::UnmountStorage(name) => {
-                  //     self.mounted_storages.unmount(name);
-                  // }
+                }
             }
         }
 

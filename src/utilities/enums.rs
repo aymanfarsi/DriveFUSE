@@ -23,19 +23,11 @@ impl Tab {
 pub enum Message {
     Quit,
     Icon,
-    Green,
-    Red,
     ShowApp,
     HideApp,
     RcloneConfigUpdated,
-    // MountStorage(String),
-    // UnmountStorage(String),
     MountAll,
     UnmountAll,
-    // EnableAutoMount,
-    // DisableAutoMount,
-    // EnableAutoStart,
-    // DisableAutoStart,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

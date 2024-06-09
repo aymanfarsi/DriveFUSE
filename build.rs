@@ -4,10 +4,8 @@ fn main() {
 
     let mut res = winres::WindowsResource::new();
 
-    res.set_icon("assets/DriveAF.ico")
-        .set_icon_with_id("assets/DriveAF.ico", "app-icon")
-        .set_icon_with_id("assets/icon-green.ico", "green-icon")
-        .set_icon_with_id("assets/icon-red.ico", "red-icon");
+    res.set_icon("assets/DriveFUSE.ico")
+        .set_icon_with_id("assets/DriveFUSE.ico", "app-icon");
 
     res.compile().unwrap();
 }

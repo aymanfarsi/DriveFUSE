@@ -19,3 +19,4 @@ pub mod ui {
     pub mod settings;
     pub mod top_panel;
 }
+pub mod error_app;

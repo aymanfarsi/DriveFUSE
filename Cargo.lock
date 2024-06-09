@@ -945,7 +945,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
-name = "drive_af"
+name = "drive_fuse"
 version = "0.7.5"
 dependencies = [
  "auto-launch",

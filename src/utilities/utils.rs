@@ -56,7 +56,7 @@ pub fn unmount_delete_directory(name: String) {
     use std::{fs, path::Path};
 
     let username = whoami::username();
-    let path = format!("/home/{}/drive_af/{}", username, name);
+    let path = format!("/home/{}/drive_fuse/{}", username, name);
 
     let _ = Command::new("rm").args(["-d", &path]).spawn().unwrap();
 
@@ -68,7 +68,7 @@ pub fn unmount_delete_directory(name: String) {
     use std::{fs, path::Path};
 
     let username = whoami::username();
-    let path = format!("/Users/{}/drive_af/{}", username, name);
+    let path = format!("/Users/{}/drive_fuse/{}", username, name);
 
     let _ = Command::new("rm").args(["-d", &path]).spawn().unwrap();
 
@@ -151,16 +151,16 @@ pub fn rclone_config_path() -> Option<PathBuf> {
 
 pub fn app_config_path() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
-    return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("drive_af"));
+    return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("drive_fuse"));
     #[cfg(not(target_os = "windows"))]
     if cfg!(target_os = "linux") {
         Some(PathBuf::from(format!(
-            "/home/{}/.config/drive_af",
+            "/home/{}/.config/drive_fuse",
             whoami::username()
         )))
     } else if cfg!(target_os = "macos") {
         Some(PathBuf::from(format!(
-            "/Users/{}/.config/drive_af",
+            "/Users/{}/.config/drive_fuse",
             whoami::username()
         )))
     } else {

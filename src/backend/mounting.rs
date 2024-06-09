@@ -45,7 +45,7 @@ impl MountingStorage {
 
         #[cfg(target_os = "linux")]
         {
-            let path = format!("/home/{}/drive_af/{}", whoami::username(), name.clone());
+            let path = format!("/home/{}/drive_fuse/{}", whoami::username(), name.clone());
             let path = Path::new(&path);
             //if let Ok(entries) = fs::read_dir(path) {
             //    for entry in entries.flatten() {
@@ -62,7 +62,7 @@ impl MountingStorage {
 
         #[cfg(target_os = "macos")]
         {
-            let path = format!("/Users/{}/drive_af/{}", whoami::username(), name.clone());
+            let path = format!("/Users/{}/drive_fuse/{}", whoami::username(), name.clone());
             let path = Path::new(&path);
             path.read_dir()
                 .map(|mut i| i.next().is_some())
@@ -118,7 +118,7 @@ impl MountingStorage {
 
             for drive in drives {
                 if !Path::new(&format!(
-                    "{}/{}/drive_af/{}",
+                    "{}/{}/drive_fuse/{}",
                     root,
                     username.clone(),
                     drive.name
@@ -127,7 +127,7 @@ impl MountingStorage {
                 {
                     DirBuilder::new()
                         .recursive(true)
-                        .create(format!("{}/{}/drive_af/{}", root, username, drive.name))
+                        .create(format!("{}/{}/drive_fuse/{}", root, username, drive.name))
                         .unwrap();
                 }
                 let mut cmd = Command::new("rclone");
@@ -135,7 +135,7 @@ impl MountingStorage {
                     .arg("mount")
                     .arg(format!("{}:", drive.name))
                     .arg(format!(
-                        "{}/{}/drive_af/{}",
+                        "{}/{}/drive_fuse/{}",
                         root,
                         username.clone(),
                         drive.name
@@ -151,7 +151,7 @@ impl MountingStorage {
                 match process {
                     Ok(process) => {
                         tracing::info!(
-                            "Mounted {} to {}/{}/drive_af/{}",
+                            "Mounted {} to {}/{}/drive_fuse/{}",
                             root,
                             username.clone(),
                             drive.name,
@@ -161,7 +161,7 @@ impl MountingStorage {
                     }
                     Err(e) => {
                         tracing::error!(
-                            "Error mounting {} at {}/{}/drive_af/{}: due to {}",
+                            "Error mounting {} at {}/{}/drive_fuse/{}: due to {}",
                             root,
                             username.clone(),
                             drive.name,
@@ -242,12 +242,12 @@ impl MountingStorage {
             let id = Self::mount_unix(name.clone());
             match id {
                 Some(id) => {
-                    tracing::info!("Mounted {} to /home/{}/drive_af/{}", username, name, name);
+                    tracing::info!("Mounted {} to /home/{}/drive_fuse/{}", username, name, name);
                     self.drives.insert(name.clone(), id);
                 }
                 None => {
                     tracing::error!(
-                        "Failed to mount {} to /home/{}/drive_af/{}",
+                        "Failed to mount {} to /home/{}/drive_fuse/{}",
                         username,
                         name,
                         name
@@ -262,12 +262,12 @@ impl MountingStorage {
             let id = Self::mount_unix(name.clone());
             match id {
                 Some(id) => {
-                    tracing::info!("Mounted {} to /Users/{}/drive_af/{}", username, name, name);
+                    tracing::info!("Mounted {} to /Users/{}/drive_fuse/{}", username, name, name);
                     self.drives.insert(name.clone(), id);
                 }
                 None => {
                     tracing::error!(
-                        "Failed to mount {} to /Users/{}/drive_af/{}",
+                        "Failed to mount {} to /Users/{}/drive_fuse/{}",
                         username,
                         name,
                         name
@@ -345,7 +345,7 @@ impl MountingStorage {
             .unwrap()
             .document_dir()
             .unwrap()
-            .join("drive_af")
+            .join("drive_fuse")
             .to_str()
             .unwrap()
             .to_owned();
@@ -401,17 +401,17 @@ impl MountingStorage {
     #[cfg(target_os = "linux")]
     fn mount_unix(name: String) -> Option<u32> {
         let username = whoami::username();
-        if !Path::new(&format!("/home/{}/drive_af/{}", username.clone(), name)).exists() {
+        if !Path::new(&format!("/home/{}/drive_fuse/{}", username.clone(), name)).exists() {
             DirBuilder::new()
                 .recursive(true)
-                .create(format!("/home/{}/drive_af/{}", username, name))
+                .create(format!("/home/{}/drive_fuse/{}", username, name))
                 .unwrap();
         }
         let mut cmd = Command::new("rclone");
         let process = cmd
             .arg("mount")
             .arg(format!("{}:", name))
-            .arg(format!("/home/{}/drive_af/{}", username, name))
+            .arg(format!("/home/{}/drive_fuse/{}", username, name))
             .arg("--vfs-cache-mode")
             .arg("full")
             //.arg("--dir-cache-time")
@@ -424,7 +424,7 @@ impl MountingStorage {
             Ok(process) => Some(process.id()),
             Err(e) => {
                 tracing::error!(
-                    "Error mounting {} at /home/{}/drive_af/{}: due to {}",
+                    "Error mounting {} at /home/{}/drive_fuse/{}: due to {}",
                     username,
                     name,
                     name,
@@ -438,17 +438,17 @@ impl MountingStorage {
     #[cfg(target_os = "macos")]
     fn mount_unix(name: String) -> Option<u32> {
         let username = whoami::username();
-        if !Path::new(&format!("/Users/{}/drive_af/{}", username.clone(), name)).exists() {
+        if !Path::new(&format!("/Users/{}/drive_fuse/{}", username.clone(), name)).exists() {
             DirBuilder::new()
                 .recursive(true)
-                .create(format!("/Users/{}/drive_af/{}", username, name))
+                .create(format!("/Users/{}/drive_fuse/{}", username, name))
                 .unwrap();
         }
         let mut cmd = Command::new("rclone");
         let process = cmd
             .arg("mount")
             .arg(format!("{}:", name))
-            .arg(format!("/Users/{}/drive_af/{}", username, name))
+            .arg(format!("/Users/{}/drive_fuse/{}", username, name))
             .arg("--vfs-cache-mode")
             .arg("full")
             //.arg("--dir-cache-time")
@@ -461,7 +461,7 @@ impl MountingStorage {
             Ok(process) => Some(process.id()),
             Err(e) => {
                 tracing::error!(
-                    "Error mounting {} at /Users/{}/drive_af/{}: due to {}",
+                    "Error mounting {} at /Users/{}/drive_fuse/{}: due to {}",
                     username,
                     name,
                     name,
@@ -494,7 +494,7 @@ impl MountingStorage {
         cmd.arg("-u");
 
         cmd.arg(&format!(
-            "{}/{}/drive_af/{}/",
+            "{}/{}/drive_fuse/{}/",
             root,
             whoami::username(),
             name

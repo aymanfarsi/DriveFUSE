@@ -1,13 +1,9 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{
-    env,
-    path::Path,
-    process::{exit, Command},
-};
+use std::{env, path::Path, process::Command};
 
-use drive_af::RcloneApp;
+use drive_fuse::{error_app::ErrorApp, RcloneApp};
 use eframe::IconData;
 use tokio::runtime::Runtime;
 use tracing::level_filters::LevelFilter;
@@ -18,7 +14,7 @@ use {directories::UserDirs, std::os::windows::process::CommandExt, winapi::um::w
 
 use std::fs::create_dir_all;
 
-fn main() {
+fn main() -> eframe::Result<()> {
     #[cfg(target_os = "windows")]
     let dir = UserDirs::new()
         .unwrap()
@@ -27,11 +23,11 @@ fn main() {
         .to_str()
         .unwrap()
         .to_owned()
-        + "/drive_af";
+        + "/drive_fuse";
 
     #[cfg(not(target_os = "windows"))]
     let dir = format!(
-        "/{}/{}/Documents/drive_af",
+        "/{}/{}/Documents/drive_fuse",
         if cfg!(target_os = "linux") {
             "home"
         } else {
@@ -44,7 +40,7 @@ fn main() {
         create_dir_all(&dir).unwrap();
     }
 
-    let file_appender = tracing_appender::rolling::never(dir, "drive_af.log");
+    let file_appender = tracing_appender::rolling::never(dir, "drive_fuse.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
     let timer = ChronoLocal::new("%m/%d/%YT%H:%M:%S".to_owned());
@@ -68,18 +64,36 @@ fn main() {
 
     let platform = env::consts::OS;
     let missing_dependencies = check_dependencies(platform);
-    if !missing_dependencies.is_empty() {
-        println!("Missing dependencies: {}", missing_dependencies.join(", "));
-        println!("Please install them and try again!");
-        exit(1);
-    }
-
-    if platform == "windows" || platform == "linux" || platform == "macos" {
+    let is_platform_supported = platform == "windows" || platform == "linux" || platform == "macos";
+    if !missing_dependencies.is_empty() || !is_platform_supported {
+        let error_app = ErrorApp {
+            is_platform_supported,
+            platform: platform.to_string(),
+            missing_dependencies,
+        };
+        let native_options = eframe::NativeOptions {
+            centered: true,
+            decorated: true,
+            transparent: false,
+            resizable: true,
+            min_window_size: Some(egui::Vec2::new(395., 292.5)),
+            initial_window_size: Some(egui::Vec2::new(395., 292.5)),
+            icon_data: Some(
+                IconData::try_from_png_bytes(include_bytes!("../assets/drivefuse.png")).unwrap(),
+            ),
+            ..Default::default()
+        };
+        eframe::run_native(
+            "DriveFUSE",
+            native_options,
+            Box::new(move |_cc| Box::new(error_app)),
+        )
+    } else {
         #[cfg(target_os = "linux")]
-        create_dir_all(format!("/home/{}/drive_af", whoami::username())).unwrap();
+        create_dir_all(format!("/home/{}/drive_fuse", whoami::username())).unwrap();
 
         #[cfg(target_os = "macos")]
-        create_dir_all(format!("/Users/{}/drive_af", whoami::username())).unwrap();
+        create_dir_all(format!("/Users/{}/drive_fuse", whoami::username())).unwrap();
 
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
@@ -98,15 +112,11 @@ fn main() {
             min_window_size: Some(min_size),
             initial_window_size: Some(min_size),
             icon_data: Some(
-                IconData::try_from_png_bytes(include_bytes!("../assets/driveaf.png")).unwrap(),
+                IconData::try_from_png_bytes(include_bytes!("../assets/drivefuse.png")).unwrap(),
             ),
             ..Default::default()
         };
-        let _ = eframe::run_native("DriveAF", native_options, Box::new(|_cc| Box::new(app)));
-    } else {
-        println!("This app only supports Windows, Linux, and MacOS.");
-        println!("Other platforms will come soon!");
-        println!("Your platform is: {}", platform);
+        eframe::run_native("DriveFUSE", native_options, Box::new(|_cc| Box::new(app)))
     }
 }
 

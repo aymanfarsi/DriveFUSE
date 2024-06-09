@@ -1,5 +1,5 @@
 [package]
-name = "drive_af"
+name = "drive_fuse"
 version = "0.7.5"
 authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
@@ -8,11 +8,11 @@ build = "build.rs"
 description = "A cross-platform cloud storage mounter."
 
 [package.metadata.bundle]
-name = "DriveAF"
-identifier = "io.github.aymanfarsi.drive_af"
+name = "DriveFUSE"
+identifier = "io.github.aymanfarsi.drive_fuse"
 icon = ["assets/*.ico"]
 short_description = "A cross-platform cloud storage mounter."
-long_description = "DriveAF is a cross-platform cloud storage mounter that allows you to mount your cloud storage as a local drive on your computer. It supports multiple cloud storage providers and allows you to mount multiple drives at the same time."
+long_description = "DriveFUSE is a cross-platform cloud storage mounter that allows you to mount your cloud storage as a local drive on your computer. It supports multiple cloud storage providers and allows you to mount multiple drives at the same time."
 
 [dependencies]
 # gui
