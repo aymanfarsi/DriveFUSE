@@ -12,10 +12,10 @@ fn main() {
 
 #[cfg(target_os = "linux")]
 fn main() {
-    println!("cargo:rerun-if-changed=assets/DriveAF.ico");
+    println!("cargo:rerun-if-changed=assets/DriveFUSE.ico");
 }
 
 #[cfg(target_os = "macos")]
 fn main() {
-    println!("cargo:rerun-if-changed=assets/DriveAF.ico");
+    println!("cargo:rerun-if-changed=assets/DriveFUSE.ico");
 }
