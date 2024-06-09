@@ -1,4 +1,4 @@
-use egui::{vec2, Button, CentralPanel, Context, Rounding, ScrollArea};
+use egui::{vec2, Button, CentralPanel, CollapsingHeader, Context, Rounding, ScrollArea};
 
 use crate::{
     utilities::{
@@ -20,26 +20,6 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
         ScrollArea::new([false, true])
             .auto_shrink([false; 2])
             .show(ui, |ui| {
-                ui.collapsing("Config file", |ui| {
-                    ui.horizontal(|ui| {
-                        ui.label("Backup rclone config file:");
-                        if ui.button("Backup").clicked() {
-                            app.rclone.create_backup();
-                        }
-                    });
-
-                    ui.add_space(8.0);
-
-                    ui.horizontal(|ui| {
-                        ui.label("Restore rclone config file:");
-                        if ui.add(Button::new("Restore")).clicked() {
-                            // app.rclone.restore_backup();
-                        }
-                    });
-                });
-
-                ui.add_space(8.0);
-
                 ui.horizontal(|ui| {
                     ui.label("Theme mode:");
 
@@ -54,11 +34,6 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                                 })
                                 .rounding(Rounding::same(5.)),
                         );
-                        // ui.selectable_value(
-                        //     &mut app.app_config.current_theme,
-                        //     theme,
-                        //     theme.name().to_string(),
-                        // );
                         if response.clicked() {
                             theme.set_theme(ctx);
                             app.app_config.set_current_theme(theme);
@@ -74,14 +49,7 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                         "Auto start is {}",
                         if is_auto_start { "enabled" } else { "disabled" }
                     ));
-                    if ui
-                        .add(Button::new(if is_auto_start {
-                            "Disable"
-                        } else {
-                            "Enable"
-                        }))
-                        .clicked()
-                    {
+                    if ui.add(Button::new("Toggle")).clicked() {
                         if is_auto_start {
                             disable_auto_start_app();
                         } else {
@@ -98,14 +66,7 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                         "Auto mount is {}",
                         if is_auto_mount { "enabled" } else { "disabled" }
                     ));
-                    if ui
-                        .add(Button::new(if is_auto_mount {
-                            "Disable"
-                        } else {
-                            "Enable"
-                        }))
-                        .clicked()
-                    {
+                    if ui.add(Button::new("Toggle")).clicked() {
                         if is_auto_mount {
                             disable_auto_mount(app);
                         } else {
@@ -126,20 +87,33 @@ pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
                             "visible"
                         }
                     ));
-                    if ui
-                        .add(Button::new(if is_hide_storage_label {
-                            "Disable"
-                        } else {
-                            "Enable"
-                        }))
-                        .clicked()
-                    {
+                    if ui.add(Button::new("Toggle")).clicked() {
                         app.app_config
                             .set_hide_storage_label(!is_hide_storage_label);
                     }
                 });
 
-                // ui.add_space(8.0);
+                ui.add_space(8.0);
+
+                CollapsingHeader::new("Config file")
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Backup rclone config file:");
+                            if ui.button("Backup").clicked() {
+                                app.rclone.create_backup();
+                            }
+                        });
+
+                        ui.add_space(8.0);
+
+                        ui.horizontal(|ui| {
+                            ui.label("Restore rclone config file:");
+                            if ui.add(Button::new("Restore")).clicked() {
+                                // app.rclone.restore_backup();
+                            }
+                        });
+                    });
 
                 // ui.horizontal(|ui| {
                 //     let is_network_mode = app.app_config.enable_network_mode;
