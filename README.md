@@ -1,37 +1,100 @@
-# Rclone App
+# DriveFUSE
 
-This is a Rust application that provides a user interface for managing and interacting with rclone configurations.
+<p align="center">
+  <a href="https://github.com/aymanfarsi/DriveFUSE"><img src="assets/drivefuse.png" alt="DriveFUSE" height="120" /></a>
+</p>
+
+<p align="center">
+  <strong>DriveFUSE is a cross-platform cloud storage mounter that allows you to mount your cloud storage as a local drive on your computer.</strong>
+</p>
+
+## Contents
+- [DriveFUSE](#drivefuse)
+  - [Contents](#contents)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Building from source](#building-from-source)
+  - [Contributing](#contributing)
+  - [Credits](#credits)
+  - [License](#license)
 
 ## Features
 
-- **Storage Management**: The application allows you to add, edit, and remove storages. Each storage is represented by a `Storage` object, which is parsed from the rclone configuration file.
+- **Cross-platform**: DriveFUSE is built using Rust, which allows it to run on Windows, macOS, and Linux.
+- **Cloud storage support**: DriveFUSE supports a wide range of cloud storage providers, including Google Drive, Dropbox, OneDrive, and more.
+- **Mounting**: DriveFUSE allows you to mount your cloud storage as a local drive on your computer, making it easy to access and manage your files.
 
-- **Backup and Restore**: The application provides functionality to create backups of your rclone configuration and restore them when needed.
+## Installation
 
-- **Configuration Reading and Writing**: The application can read and write to the rclone configuration file.
+To use DriveFUSE, you need to have the following dependencies installed on your system:
 
-## Tools Used
+> Auto-installing dependencies when missing is a feature that will be added in the future.
 
-- **Rust**: The application is written in Rust, a systems programming language that runs blazingly fast, prevents segfaults, and guarantees thread safety.
+- You need to install `rclone` following the instructions on their [website](https://rclone.org/install/).
+- On Windows, you need to have `WinFsp`.
+- On Unix systems (Linux and macOS), you need some variation of `fusermount3` installed.
 
-- **Rclone**: This application is a user interface for rclone, a command line program to manage files on cloud storage.
+## Building from source
 
-- **Cargo**: Cargo is the Rust package manager. It is used for managing Rust dependencies, building the project, and more.
+In order to build DriveFUSE from source, you need to have the Rust programming language installed on your system. Use this command to install Rust:
 
-- **IDEA**: The project is developed using the IDEA IDE.
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
-## Building the Project
+1. Clone the repository:
 
-To build the project, run the `build_release` script.
+```bash
+git clone https://github.com/aymanfarsi/DriveFUSE.git
+```
 
-## Running the Project
+2. Change into the project directory and rename it to avoid issues with building the executable:
 
-To run the project, navigate to the `target/release` directory and run the compiled binary.
+```bash
+mv DriveFUSE drive_fuse
+cd drive_fuse
+```
+
+3. Build the project:
+
+```bash
+cargo build --release
+```
+
+4. The binary will be located in the `target/release` directory. You can run it using:
+
+```bash
+./target/release/drive_fuse
+```
+
+5. You can also install the binary to your system using:
+
+```bash
+cargo install --path .
+```
+
+6. You can now run the binary using `drive_fuse` or search for it in your system's application menu:
 
 ## Contributing
 
-Contributions are welcome. Please feel free to open an issue or submit a pull request.
+Contributions are welcome! Feel free to open an issue or submit a pull request if you have any ideas, bug reports, or feature requests.
+
+1. Fork the repository and clone it to your local machine.
+2. Create a new branch for your changes.
+3. Make your changes and commit them.
+4. Push the changes.
+5. Submit a pull request.
+
+## Credits
+
+DriveFUSE is built and relies on the following technologies:
+
+- [Rust](https://www.rust-lang.org/): A systems programming language that focuses on safety, speed, and concurrency.
+- [egui](https://www.github.com/emilk/egui): A simple, fast, and highly portable immediate mode GUI library.
+- [rclone](https://rclone.org/): A command-line program to manage files on cloud storage.
+- [WinFsp](https://winfsp.dev/): A Windows File System Proxy that allows you to create user mode file systems.
+- [fusermount3](https://www.man7.org/linux/man-pages/man1/fusermount3.1.html): A program to mount and unmount FUSE filesystems.
 
 ## License
 
-This project is licensed under the terms of the MIT license.
+DriveFUSE is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
