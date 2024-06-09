@@ -4,7 +4,13 @@ use eframe::egui;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 
 #[cfg(any(target_os = "windows", target_os = "linux"))]
-use {crate::utilities::tray_menu::init_tray_menu, tray_item::TrayItem};
+use {
+    crate::utilities::tray_menu::init_tray_menu,
+    tray_item::{IconSource, TrayItem},
+};
+
+#[cfg(target_os = "linux")]
+use crate::utilities::utils::create_linux_tray_icon;
 
 use crate::{
     backend::{
@@ -18,7 +24,7 @@ use crate::{
     },
     utilities::{
         enums::{Message, Tab},
-        utils::{create_linux_tray_icon, rclone_config_path},
+        utils::rclone_config_path,
     },
 };
 
@@ -30,7 +36,7 @@ pub struct RcloneApp {
     pub current_tab: Tab,
 
     pub new_storage_name: String,
-    
+
     is_first_run: bool,
     is_close_requested: bool,
 
