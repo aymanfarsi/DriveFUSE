@@ -20,9 +20,12 @@ use crate::RcloneApp;
 pub fn create_linux_tray_icon(bytes: &[u8]) -> IconSource {
     let cursor = Cursor::new(bytes);
     let decoder = png::Decoder::new(cursor);
-    let mut reader = decoder.read_info().unwrap();
-    let mut buf = vec![0; reader.output_buffer_size()];
-    reader.next_frame(&mut buf).unwrap();
+    let (info, mut reader) = decoder.read_info().expect("Error while reading info");
+    let mut buf = vec![0; info.buffer_size()];
+    reader
+        .next_frame(&mut buf)
+        .expect("Error while reading next frame");
+
     IconSource::Data {
         data: buf,
         height: 32,

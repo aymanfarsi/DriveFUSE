@@ -5,10 +5,7 @@ use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use tokio::sync::mpsc;
 
 #[cfg(any(target_os = "windows", target_os = "linux"))]
-use {
-    crate::utilities::tray_menu::init_tray_menu,
-    tray_item::{IconSource, TrayItem},
-};
+use {crate::utilities::tray_menu::init_tray_menu, tray_item::TrayItem};
 
 #[cfg(target_os = "linux")]
 use crate::utilities::utils::create_linux_tray_icon;
@@ -29,6 +26,7 @@ use crate::{
     },
 };
 
+#[derive(Debug)]
 pub struct RcloneApp {
     pub app_config: AppConfig,
     pub rclone: Rclone,
@@ -141,9 +139,10 @@ impl eframe::App for RcloneApp {
                 let tx_egui_clone_tray = self.tx_egui.clone();
                 let ctx_clone_tray = ctx.clone();
                 tokio::spawn(async move {
-                    let app_icon = create_linux_tray_icon(include_bytes!("../assets/driveaf.png"));
+                    let app_icon =
+                        create_linux_tray_icon(include_bytes!("../assets/drivefuse.png"));
 
-                    let mut tray = TrayItem::new("DriveAF Tray", app_icon).unwrap();
+                    let mut tray = TrayItem::new("DriveFUSE Tray", app_icon).unwrap();
                     let rx_tray = init_tray_menu(&mut tray);
                     loop {
                         match rx_tray.recv() {
@@ -155,26 +154,11 @@ impl eframe::App for RcloneApp {
                                 break;
                             }
                             Ok(Message::Icon) => {
-                                let app_icon =
-                                    create_linux_tray_icon(include_bytes!("../assets/driveaf.png"));
+                                let app_icon = create_linux_tray_icon(include_bytes!(
+                                    "../assets/drivefuse.png"
+                                ));
                                 tray.set_icon(app_icon).unwrap();
                                 tx_egui_clone_tray.send(Message::Icon).unwrap();
-                                ctx_clone_tray.request_repaint();
-                            }
-                            Ok(Message::Red) => {
-                                let red_icon = create_linux_tray_icon(include_bytes!(
-                                    "../assets/icon-red.ico"
-                                ));
-                                tray.set_icon(red_icon).unwrap();
-                                tx_egui_clone_tray.send(Message::Red).unwrap();
-                                ctx_clone_tray.request_repaint();
-                            }
-                            Ok(Message::Green) => {
-                                let green_icon = create_linux_tray_icon(include_bytes!(
-                                    "../assets/icon-green.ico"
-                                ));
-                                tray.set_icon(green_icon).unwrap();
-                                tx_egui_clone_tray.send(Message::Green).unwrap();
                                 ctx_clone_tray.request_repaint();
                             }
                             Ok(Message::ShowApp) => {

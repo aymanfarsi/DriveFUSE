@@ -17,11 +17,11 @@ use std::fs::create_dir_all;
 fn main() -> eframe::Result<()> {
     #[cfg(target_os = "windows")]
     let dir = UserDirs::new()
-        .unwrap()
+        .expect("Unable to get user directories")
         .document_dir()
-        .unwrap()
+        .expect("Unable to get document directory")
         .to_str()
-        .unwrap()
+        .expect("Unable to convert path to string")
         .to_owned()
         + "/drive_fuse";
 
@@ -37,7 +37,7 @@ fn main() -> eframe::Result<()> {
     );
 
     if !Path::new(&dir).exists() {
-        create_dir_all(&dir).unwrap();
+        create_dir_all(&dir).expect("Unable to create directory");
     }
 
     let file_appender = tracing_appender::rolling::never(dir, "drive_fuse.log");
@@ -79,7 +79,8 @@ fn main() -> eframe::Result<()> {
             min_window_size: Some(egui::Vec2::new(395., 292.5)),
             initial_window_size: Some(egui::Vec2::new(395., 292.5)),
             icon_data: Some(
-                IconData::try_from_png_bytes(include_bytes!("../assets/drivefuse.png")).unwrap(),
+                IconData::try_from_png_bytes(include_bytes!("../assets/drivefuse.png"))
+                    .expect("Unable to get icon data"),
             ),
             ..Default::default()
         };
@@ -90,10 +91,12 @@ fn main() -> eframe::Result<()> {
         )
     } else {
         #[cfg(target_os = "linux")]
-        create_dir_all(format!("/home/{}/drive_fuse", whoami::username())).unwrap();
+        create_dir_all(format!("/home/{}/drive_fuse", whoami::username()))
+            .expect("Unable to create directory");
 
         #[cfg(target_os = "macos")]
-        create_dir_all(format!("/Users/{}/drive_fuse", whoami::username())).unwrap();
+        create_dir_all(format!("/Users/{}/drive_fuse", whoami::username()))
+            .expect("Unable to create directory");
 
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
@@ -112,7 +115,8 @@ fn main() -> eframe::Result<()> {
             min_window_size: Some(min_size),
             initial_window_size: Some(min_size),
             icon_data: Some(
-                IconData::try_from_png_bytes(include_bytes!("../assets/drivefuse.png")).unwrap(),
+                IconData::try_from_png_bytes(include_bytes!("../assets/drivefuse.png"))
+                    .expect("Unable to get icon data"),
             ),
             ..Default::default()
         };
@@ -135,7 +139,7 @@ fn check_dependencies(platform: &str) -> Vec<String> {
             let mut cmd = Command::new("which");
             let output = cmd.arg("fusermount");
 
-            let output = output.output().unwrap();
+            let output = output.output().expect("Failed to execute command");
             if !output.status.success() {
                 missing_dependencies.push("FUSE".to_string());
             }
@@ -145,7 +149,7 @@ fn check_dependencies(platform: &str) -> Vec<String> {
             let mut cmd = Command::new("which");
             let output = cmd.arg("umount");
 
-            let output = output.output().unwrap();
+            let output = output.output().expect("Failed to execute command");
             if !output.status.success() {
                 missing_dependencies.push("FUSE".to_string());
             }
@@ -160,10 +164,18 @@ fn check_dependencies(platform: &str) -> Vec<String> {
     #[cfg(target_os = "windows")]
     output.creation_flags(winbase::CREATE_NO_WINDOW);
 
-    let output = output.output().unwrap();
-    if !output.status.success() {
-        missing_dependencies.push("Rclone".to_string());
-    }
+    let output = output.output();
+    match output {
+        Ok(output) => {
+            if !output.status.success() {
+                missing_dependencies.push("Rclone".to_string());
+            }
+        }
+        Err(err) => {
+            tracing::error!("Error in check_dependencies while checking rclone: {}", err);
+            missing_dependencies.push("Rclone".to_string());
+        }
+    };
 
     missing_dependencies
 }
