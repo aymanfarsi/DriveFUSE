@@ -9,14 +9,12 @@
 </p>
 
 ## Contents
-- [DriveFUSE](#drivefuse)
-  - [Contents](#contents)
-  - [Features](#features)
-  - [Installation](#installation)
-  - [Building from source](#building-from-source)
-  - [Contributing](#contributing)
-  - [Credits](#credits)
-  - [License](#license)
+- [Features](#features)
+- [Installation](#installation)
+- [Building from source](#building-from-source)
+- [Contributing](#contributing)
+- [Credits](#credits)
+- [License](#license)
 
 ## Features
 
@@ -73,7 +71,14 @@ cargo build --release
 cargo install --path .
 ```
 
-6. You can now run the binary using `drive_fuse` or search for it in your system's application menu:
+6. Otherwise, run the install script:
+
+```bash
+./install-drive-fuse # Unix systems
+sh install-drive-fuse # Windows
+```
+
+7. You can now run the binary using `drive_fuse` or search for it in your system's application menu.
 
 ## Contributing
 
