@@ -140,11 +140,11 @@ impl MountingStorage {
                         username.clone(),
                         drive.name
                     ))
+                    // .arg("--allow-other")
                     .arg("--vfs-cache-mode")
                     .arg("full")
                     .arg("--dir-cache-time")
-                    .arg("1000h")
-                    .arg("--allow-other");
+                    .arg("1000h");
 
                 let process = process.spawn();
 
@@ -413,10 +413,10 @@ impl MountingStorage {
             .arg(format!("{}:", name))
             .arg(format!("/home/{}/drive_fuse/{}", username, name))
             .arg("--vfs-cache-mode")
-            .arg("full")
+            .arg("full");
             //.arg("--dir-cache-time")
             //.arg("1000h")
-            .arg("--allow-other");
+            // .arg("--allow-other")
 
         let process = process.spawn();
 
@@ -450,10 +450,10 @@ impl MountingStorage {
             .arg(format!("{}:", name))
             .arg(format!("/Users/{}/drive_fuse/{}", username, name))
             .arg("--vfs-cache-mode")
-            .arg("full")
+            .arg("full");
             //.arg("--dir-cache-time")
             //.arg("1000h")
-            .arg("--allow-other");
+            // .arg("--allow-other")
 
         let process = process.spawn();
 

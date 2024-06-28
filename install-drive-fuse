@@ -1,0 +1,30 @@
+#!/bin/bash
+
+echo "Building DriveFuse"
+
+desktop_file=$(cat << EOM
+[Desktop Entry]
+Type=Application
+Name=DriveFUSE
+Comment=DriveFUSE storage mounter
+Exec=drive_fuse
+Icon=$HOME/.local/share/icons/drivefuse.png
+Terminal=false
+Categories=Utility;Application;
+EOM
+)
+
+if [[ $(uname -s) == *NT* ]]; then
+    echo "Building for Linux"
+    cargo install --path .
+elif [[ $(uname -s) == *Darwin* ]]; then
+    echo "Building for MacOS"
+    cargo install --path .
+else
+    echo "Building for Linux"
+    cargo install --path .
+    echo "$desktop_file" > $HOME/.local/share/applications/drivefuse.desktop
+    cp assets/drivefuse.png $HOME/.local/share/icons/drivefuse.png
+fi
+
+echo "DriveFuse built successfully"
