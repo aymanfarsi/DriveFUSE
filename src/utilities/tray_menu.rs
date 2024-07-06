@@ -14,7 +14,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
             .try_send(Message::ShowApp)
             .expect("Failed to send ShowApp message");
     })
-    .unwrap();
+    .expect("Failed to add Show app menu item");
 
     let hide_app_tx = tx.clone();
     tray.add_menu_item("Hide app", move || {
@@ -22,10 +22,12 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
             .try_send(Message::HideApp)
             .expect("Failed to send HideApp message");
     })
-    .unwrap();
+    .expect("Failed to add Hide app menu item");
 
     #[cfg(target_os = "windows")]
-    tray.inner_mut().add_separator().unwrap();
+    tray.inner_mut()
+        .add_separator()
+        .expect("Failed to add separator");
 
     let mount_all_tx = tx.clone();
     tray.add_menu_item("Mount all", move || {
@@ -33,7 +35,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
             .try_send(Message::MountAll)
             .expect("Failed to send MountAll message");
     })
-    .unwrap();
+    .expect("Failed to add Mount all menu item");
 
     let unmount_all_tx = tx.clone();
     tray.add_menu_item("Unmount all", move || {
@@ -41,10 +43,12 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
             .try_send(Message::UnmountAll)
             .expect("Failed to send UnmountAll message");
     })
-    .unwrap();
+    .expect("Failed to add Unmount all menu item");
 
     #[cfg(target_os = "windows")]
-    tray.inner_mut().add_separator().unwrap();
+    tray.inner_mut()
+        .add_separator()
+        .expect("Failed to add separator");
 
     let icon_tx = tx.clone();
     tray.add_menu_item("DriveFUSE", move || {
@@ -52,10 +56,12 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
             .try_send(Message::Icon)
             .expect("Failed to send Icon message");
     })
-    .unwrap();
+    .expect("Failed to add DriveFUSE menu item");
 
     #[cfg(target_os = "windows")]
-    tray.inner_mut().add_separator().unwrap();
+    tray.inner_mut()
+        .add_separator()
+        .expect("Failed to add separator");
 
     let quit_tx = tx.clone();
     tray.add_menu_item("Quit", move || {
@@ -63,7 +69,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> Receiver<Message> {
             .try_send(Message::Quit)
             .expect("Failed to send Quit message");
     })
-    .unwrap();
+    .expect("Failed to add Quit menu item");
 
     rx
 }

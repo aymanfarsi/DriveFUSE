@@ -1,10 +1,10 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{env, path::Path, process::Command};
+use std::{env, fs::create_dir_all, path::Path, process::Command};
 
-use drive_fuse::{error_app::ErrorApp, DriveFUSE};
-use eframe::IconData;
+use eframe::icon_data::from_png_bytes;
+use egui::{Vec2, ViewportBuilder};
 use tokio::runtime::Runtime;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::fmt::time::ChronoLocal;
@@ -12,7 +12,7 @@ use tracing_subscriber::fmt::time::ChronoLocal;
 #[cfg(target_os = "windows")]
 use {directories::UserDirs, std::os::windows::process::CommandExt, winapi::um::winbase};
 
-use std::fs::create_dir_all;
+use drive_fuse::{error_app::ErrorApp, DriveFUSE};
 
 fn main() -> eframe::Result<()> {
     #[cfg(target_os = "windows")]
@@ -71,17 +71,19 @@ fn main() -> eframe::Result<()> {
             platform: platform.to_string(),
             missing_dependencies,
         };
+        let min_size = Vec2::new(395., 292.5);
         let native_options = eframe::NativeOptions {
             centered: true,
-            decorated: true,
-            transparent: false,
-            resizable: true,
-            min_window_size: Some(egui::Vec2::new(395., 292.5)),
-            initial_window_size: Some(egui::Vec2::new(395., 292.5)),
-            icon_data: Some(
-                IconData::try_from_png_bytes(include_bytes!("../assets/drivefuse.png"))
-                    .expect("Unable to get icon data"),
-            ),
+            viewport: ViewportBuilder::default()
+                .with_decorations(true)
+                .with_transparent(false)
+                .with_resizable(true)
+                .with_min_inner_size(min_size)
+                .with_inner_size(min_size)
+                .with_icon(
+                    from_png_bytes(include_bytes!("../assets/drivefuse.png"))
+                        .expect("Unable to get icon data"),
+                ),
             ..Default::default()
         };
         eframe::run_native(
@@ -101,18 +103,19 @@ fn main() -> eframe::Result<()> {
         let rt = Runtime::new().expect("Unable to create Runtime");
         let _enter = rt.enter();
 
-        let min_size = egui::Vec2::new(490., 292.5);
+        let min_size = Vec2::new(490., 292.5);
         let native_options = eframe::NativeOptions {
             centered: true,
-            decorated: true,
-            transparent: false,
-            resizable: true,
-            min_window_size: Some(min_size),
-            initial_window_size: Some(min_size),
-            icon_data: Some(
-                IconData::try_from_png_bytes(include_bytes!("../assets/drivefuse.png"))
-                    .expect("Unable to get icon data"),
-            ),
+            viewport: ViewportBuilder::default()
+                .with_decorations(true)
+                .with_transparent(false)
+                .with_resizable(true)
+                .with_min_inner_size(min_size)
+                .with_inner_size(min_size)
+                .with_icon(
+                    from_png_bytes(include_bytes!("../assets/drivefuse.png"))
+                        .expect("Unable to get icon data"),
+                ),
             ..Default::default()
         };
         eframe::run_native(

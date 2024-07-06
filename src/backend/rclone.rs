@@ -49,20 +49,22 @@ impl Rclone {
     }
 
     fn read_config() -> Vec<String> {
-        let rclone_config_path = rclone_config_path().unwrap().join("rclone.conf");
+        let rclone_config_path = rclone_config_path()
+            .expect("Failed to get rclone config path")
+            .join("rclone.conf");
         let file = OpenOptions::new()
             .write(true)
             .create(true)
             .truncate(false)
             .read(true)
             .open(rclone_config_path)
-            .unwrap();
+            .expect("Failed to open rclone config file");
         let buffered = BufReader::new(file);
 
         let mut lines: Vec<String> = Vec::new();
 
         for line in buffered.lines() {
-            lines.push(line.unwrap());
+            lines.push(line.expect("Failed to read line"));
         }
 
         tracing::info!("Read app config");
@@ -71,18 +73,20 @@ impl Rclone {
     }
 
     fn write_config(lines: Vec<String>, file_name: Option<String>) {
-        let rclone_config_path = rclone_config_path().unwrap().join({
-            match file_name.clone() {
-                Some(val) => val,
-                None => "rclone.conf".to_string(),
-            }
-        });
+        let rclone_config_path = rclone_config_path()
+            .expect("Failed to get rclone config path")
+            .join({
+                match file_name.clone() {
+                    Some(val) => val,
+                    None => "rclone.conf".to_string(),
+                }
+            });
         let file = OpenOptions::new()
             .write(true)
             .create(file_name.is_some())
             .truncate(true)
             .open(rclone_config_path)
-            .unwrap();
+            .expect("Failed to open rclone config file");
         let mut buffered = BufReader::new(file);
 
         for line in lines {
@@ -118,24 +122,24 @@ impl Rclone {
                 });
             } else if line.starts_with('[') {
                 line.get(1..line.len() - 1)
-                    .unwrap()
+                    .expect("couldnt get drive name")
                     .clone_into(&mut drive_name);
             } else {
                 match line.get(..2) {
                     Some("ty") => line
                         .split('=')
                         .last()
-                        .unwrap()
+                        .expect("couldnt get drive type")
                         .replace(' ', "")
                         .clone_into(&mut drive_type),
                     Some("sc") => line
                         .split('=')
                         .last()
-                        .unwrap()
+                        .expect("couldnt get drive scope")
                         .replace(' ', "")
                         .clone_into(&mut drive_scope),
                     Some("to") => {
-                        let input = line.split('=').last().unwrap();
+                        let input = line.split('=').last().expect("couldnt get token");
                         let json: Value =
                             serde_json::from_str(input).expect("couldnt parse token json");
                         drive_token = Some(TokenStruct {
@@ -145,7 +149,7 @@ impl Rclone {
                             expiry: DateTime::parse_from_rfc3339(
                                 &json["expiry"].to_string().replace('\"', ""),
                             )
-                            .unwrap(),
+                            .expect("couldnt parse expiry"),
                         });
                     }
                     _ => continue,
@@ -177,7 +181,7 @@ impl Rclone {
 
         for line in lines {
             if line.starts_with('[') && !is_updated {
-                if line.get(1..line.len() - 1).unwrap() == old_name {
+                if line.get(1..line.len() - 1).expect("couldnt get drive name") == old_name {
                     new_lines.push(format!("[{}]", new_name));
                     is_updated = true;
                 } else {
@@ -215,12 +219,15 @@ impl Rclone {
         tokio::spawn(async move {
             let res = rfd::AsyncFileDialog::new()
                 .add_filter("rclone config", &["conf"])
-                .set_directory(app_config_path().unwrap())
+                .set_directory(app_config_path().expect("couldnt get app config path"))
                 .save_file()
                 .await;
 
             if let Some(path) = res {
-                Self::write_config(lines, Some(path.path().to_str().unwrap().to_owned()));
+                Self::write_config(
+                    lines,
+                    Some(path.path().to_str().expect("couldnt get path").to_owned()),
+                );
             }
         });
     }
@@ -229,7 +236,7 @@ impl Rclone {
         tokio::spawn(async move {
             let res = rfd::AsyncFileDialog::new()
                 .add_filter("rclone config", &["conf"])
-                .set_directory(app_config_path().unwrap())
+                .set_directory(app_config_path().expect("couldnt get app config path"))
                 .pick_file()
                 .await;
 
@@ -238,17 +245,24 @@ impl Rclone {
                     .write(true)
                     .create(true)
                     .truncate(false)
-                    .open(rclone_config_path().unwrap().join("rclone.conf"))
-                    .unwrap();
+                    .open(
+                        rclone_config_path()
+                            .expect("couldnt get rclone config path")
+                            .join("rclone.conf"),
+                    )
+                    .expect("couldnt open file");
                 let mut buffered = BufReader::new(file);
 
-                let backup_file = OpenOptions::new().read(true).open(path.path()).unwrap();
+                let backup_file = OpenOptions::new()
+                    .read(true)
+                    .open(path.path())
+                    .expect("couldnt open file");
                 let backup_buffered = BufReader::new(backup_file);
 
                 for line in backup_buffered.lines() {
                     buffered
                         .get_mut()
-                        .write_all(line.unwrap().as_bytes())
+                        .write_all(line.expect("couldnt read line").as_bytes())
                         .expect("couldnt write to file");
                     buffered
                         .get_mut()

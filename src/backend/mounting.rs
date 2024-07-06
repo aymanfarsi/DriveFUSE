@@ -32,7 +32,7 @@ impl Default for MountingStorage {
 
 impl MountingStorage {
     pub fn total_mounted(&self) -> u32 {
-        self.drives.len().try_into().unwrap()
+        self.drives.len().try_into().expect("Failed to convert")
     }
 
     pub fn is_drive_letter_mounted(&self, drive: char) -> bool {
@@ -53,7 +53,7 @@ impl MountingStorage {
             let path = Path::new(&path);
             //if let Ok(entries) = fs::read_dir(path) {
             //    for entry in entries.flatten() {
-            //        if entry.file_type().map(|ft| ft.is_file()).unwrap_or(false) {
+            //        if entry.file_type().map(|ft| ft.is_file()).expect_or(false) {
             //            return true;
             //        }
             //    }
@@ -70,7 +70,7 @@ impl MountingStorage {
             let path = Path::new(&path);
             path.read_dir()
                 .map(|mut i| i.next().is_some())
-                .unwrap_or(false)
+                .expect_or(false)
         }
     }
 
@@ -87,10 +87,11 @@ impl MountingStorage {
         #[cfg(target_os = "windows")]
         {
             let mut success = true;
-            // let mut available_drives = available_drives();
             for drive in drives {
-                // let next_drive = available_drives.first().unwrap().to_string();
-                let letter = _drives_letters.get(&drive.name).unwrap().to_string();
+                let letter = _drives_letters
+                    .get(&drive.name)
+                    .expect("Failed to get letter")
+                    .to_string();
                 let id =
                     Self::mount_windows(drive.name.clone(), letter.clone(), false, _network_mode);
                 match id {
@@ -98,8 +99,10 @@ impl MountingStorage {
                         // available_drives.remove(0);
                         tracing::info!("Mounted {} to {}", drive.name, letter);
                         self.drives.insert(drive.name.clone(), id);
-                        self.mounted
-                            .insert(drive.name, letter.chars().next().unwrap());
+                        self.mounted.insert(
+                            drive.name,
+                            letter.chars().next().expect("Failed to get letter"),
+                        );
                     }
                     None => {
                         tracing::error!("Failed to mount {} to {}", drive.name, letter);
@@ -132,7 +135,7 @@ impl MountingStorage {
                     DirBuilder::new()
                         .recursive(true)
                         .create(format!("{}/{}/drive_fuse/{}", root, username, drive.name))
-                        .unwrap();
+                        .expect("Failed to create directory");
                 }
                 let mut cmd = Command::new("rclone");
                 let process = cmd
@@ -144,7 +147,6 @@ impl MountingStorage {
                         username.clone(),
                         drive.name
                     ))
-                    // .arg("--allow-other")
                     .arg("--vfs-cache-mode")
                     .arg("full")
                     .arg("--dir-cache-time")
@@ -163,14 +165,14 @@ impl MountingStorage {
                         );
                         self.drives.insert(drive.name.clone(), process.id());
                     }
-                    Err(e) => {
+                    Err(err) => {
                         tracing::error!(
                             "Error mounting {} at {}/{}/drive_fuse/{}: due to {}",
                             root,
                             username.clone(),
                             drive.name,
                             drive.name,
-                            e
+                            err
                         );
                         success = false;
                     }
@@ -200,11 +202,14 @@ impl MountingStorage {
         #[cfg(target_family = "unix")]
         {
             let mut success = true;
-            for (name, process_id) in self.drives.iter() {
+            for (name, process_id) in self.drives.clone().iter() {
                 let success_unmount = Self::unmount_unix(*process_id, name.to_string());
                 if !success_unmount {
                     tracing::error!("Error unmounting {}", name);
                     success = false;
+                } else {
+                    self.mounted.remove(name);
+                    self.drives.remove(name);
                 }
             }
             success
@@ -231,11 +236,17 @@ impl MountingStorage {
                 Some(id) => {
                     tracing::info!("Mounted {} to {}", name, _driver_letter);
                     self.drives.insert(name.clone(), id);
-                    self.mounted
-                        .insert(name.clone(), _driver_letter.chars().next().unwrap());
-                    _app_config.set_drives_letters(name, _driver_letter.chars().next().unwrap());
+                    self.mounted.insert(
+                        name.clone(),
+                        _driver_letter.chars().next().expect("Failed to get letter"),
+                    );
+                    _app_config.set_drives_letters(
+                        name,
+                        _driver_letter.chars().next().expect("Failed to get letter"),
+                    );
 
-                    tx.send(Message::MountedSuccess).unwrap();
+                    tx.send(Message::MountedSuccess)
+                        .expect("Failed to send MoutedSuccess message");
                 }
                 None => {
                     tracing::error!("Failed to mount {} to {}", name, _driver_letter);
@@ -280,7 +291,8 @@ impl MountingStorage {
                     );
                     self.drives.insert(name.clone(), id);
 
-                    tx.send(Message::MountedSuccess).unwrap();
+                    tx.send(Message::MountedSuccess)
+                        .expect("Failed to send MoutedSuccess message");
                 }
                 None => {
                     tracing::error!(
@@ -297,7 +309,10 @@ impl MountingStorage {
     pub fn unmount(&mut self, driver_letter: String) {
         #[cfg(target_os = "windows")]
         {
-            let process_id = *self.drives.get(&driver_letter).unwrap();
+            let process_id = *self
+                .drives
+                .get(&driver_letter)
+                .expect("Failed to get process id");
             let success = Self::unmount_windows(process_id);
             if success {
                 self.drives.remove(&driver_letter);
@@ -308,7 +323,10 @@ impl MountingStorage {
         }
         #[cfg(target_os = "linux")]
         {
-            let process_id = *self.drives.get(&driver_letter).unwrap();
+            let process_id = *self
+                .drives
+                .get(&driver_letter)
+                .expect("Failed to get process id");
             let success = Self::unmount_unix(process_id, driver_letter.clone());
             if success {
                 #[cfg(target_os = "linux")]
@@ -317,10 +335,10 @@ impl MountingStorage {
                         .drives
                         .iter()
                         .find(|(_, &v)| v == process_id)
-                        .unwrap()
+                        .expect("Failed to get name")
                         .0
                         .clone();
-                    // unmount_delete_directory(name);
+
                     self.drives.remove(&driver_letter);
                 }
             } else {
@@ -330,7 +348,10 @@ impl MountingStorage {
 
         #[cfg(target_os = "macos")]
         {
-            let process_id = *self.drives.get(&driver_letter).unwrap();
+            let process_id = *self
+                .drives
+                .get(&driver_letter)
+                .expect("Failed to get process id");
             let success = Self::unmount_unix(process_id, driver_letter.clone());
             if success {
                 #[cfg(target_os = "macos")]
@@ -339,10 +360,10 @@ impl MountingStorage {
                         .drives
                         .iter()
                         .find(|(_, &v)| v == process_id)
-                        .unwrap()
+                        .expect("Failed to get name")
                         .0
                         .clone();
-                    // unmount_delete_directory(name);
+
                     self.drives.remove(&driver_letter);
                 }
             } else {
@@ -359,12 +380,12 @@ impl MountingStorage {
         network_mode: bool,
     ) -> Option<u32> {
         let doc_app = UserDirs::new()
-            .unwrap()
+            .expect("Failed to get user directories")
             .document_dir()
-            .unwrap()
+            .expect("Failed to get document directory")
             .join("drive_fuse")
             .to_str()
-            .unwrap()
+            .expect("Failed to convert to string")
             .to_owned();
         let mut cmd = Command::new("rclone");
         let process = cmd
@@ -422,7 +443,7 @@ impl MountingStorage {
             DirBuilder::new()
                 .recursive(true)
                 .create(format!("/home/{}/drive_fuse/{}", username, name))
-                .unwrap();
+                .expect("Failed to create directory");
         }
         let mut cmd = Command::new("rclone");
         let process = cmd
@@ -431,9 +452,6 @@ impl MountingStorage {
             .arg(format!("/home/{}/drive_fuse/{}", username, name))
             .arg("--vfs-cache-mode")
             .arg("full");
-        //.arg("--dir-cache-time")
-        //.arg("1000h")
-        // .arg("--allow-other")
 
         let process = process.spawn();
 
@@ -459,7 +477,7 @@ impl MountingStorage {
             DirBuilder::new()
                 .recursive(true)
                 .create(format!("/Users/{}/drive_fuse/{}", username, name))
-                .unwrap();
+                .expect("Failed to create directory");
         }
         let mut cmd = Command::new("rclone");
         let process = cmd
@@ -468,9 +486,6 @@ impl MountingStorage {
             .arg(format!("/Users/{}/drive_fuse/{}", username, name))
             .arg("--vfs-cache-mode")
             .arg("full");
-        //.arg("--dir-cache-time")
-        //.arg("1000h")
-        // .arg("--allow-other")
 
         let process = process.spawn();
 
@@ -491,8 +506,6 @@ impl MountingStorage {
 
     #[cfg(target_family = "unix")]
     fn unmount_unix(_id: u32, name: String) -> bool {
-        // let mut cmd = Command::new("kill");
-        // let process = cmd.arg("-9").arg(&id.to_string());
         let root = if cfg!(target_os = "macos") {
             "/Users"
         } else {

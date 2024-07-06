@@ -76,7 +76,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
                             let letter = app
                                 .app_config
                                 .get_drive_letter(&storage.name.clone())
-                                .unwrap_or("N/A".to_string());
+                                .expect_or("N/A".to_string());
                             #[cfg(target_os = "windows")]
                             if is_mounted {
                                 ui.label(letter.clone());
@@ -143,7 +143,9 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
                                         } else {
                                             let is_drive_letter_mounted =
                                                 app.mounted_storages.is_drive_letter_mounted(
-                                                    letter.clone().chars().next().unwrap(),
+                                                    letter.clone().chars().next().expect(
+                                                        "Couldn't get drive letter from chars",
+                                                    ),
                                                 );
                                             if letter != "N/A" && !is_drive_letter_mounted {
                                                 app.mounted_storages.mount(
@@ -154,7 +156,9 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
                                                 );
                                             } else if letter == "N/A" {
                                                 let possible_drives = available_drives();
-                                                let first_drive = possible_drives.first().unwrap();
+                                                let first_drive = possible_drives
+                                                    .first()
+                                                    .expect("No available drives");
                                                 app.app_config.set_drives_letters(
                                                     storage.name.clone(),
                                                     *first_drive,

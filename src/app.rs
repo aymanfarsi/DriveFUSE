@@ -1,4 +1,5 @@
 use eframe::egui;
+use egui::ViewportCommand;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
@@ -75,7 +76,28 @@ impl DriveFUSE {
 }
 
 impl eframe::App for DriveFUSE {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // * Check if close requested
+        if ctx.input(|i| i.viewport().close_requested()) {
+            match self.is_close_requested {
+                true => match self.mounted_storages.unmount_all() {
+                    true => {}
+                    false => {
+                        tracing::error!("Failed to unmount all drives");
+                        self.is_close_requested = false;
+                        ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+                    }
+                },
+                false => {
+                    self.tx_egui
+                        .try_send(Message::HideApp)
+                        .expect("Error sending HideApp message to egui");
+                    self.is_close_requested = false;
+                    ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+                }
+            }
+        }
+
         // * First run setup
         if self.is_first_run {
             self.is_first_run = false;
@@ -90,28 +112,40 @@ impl eframe::App for DriveFUSE {
                 let ctx_clone_tray = ctx.clone();
                 tokio::spawn(async move {
                     let icon = IconSource::Resource("app-icon");
-                    let mut tray = TrayItem::new("DriveFUSE Tray", icon).unwrap();
+                    let mut tray =
+                        TrayItem::new("DriveFUSE Tray", icon).expect("Error creating tray item");
                     let rx_tray = init_tray_menu(&mut tray);
                     loop {
                         match rx_tray.recv() {
                             Ok(Message::Quit) => {
-                                tx_egui_clone_tray.send(Message::ShowApp).unwrap();
+                                tx_egui_clone_tray
+                                    .send(Message::ShowApp)
+                                    .expect("Error sending ShowApp message to egui");
                                 ctx_clone_tray.request_repaint();
-                                tx_egui_clone_tray.send(Message::Quit).unwrap();
+                                tx_egui_clone_tray
+                                    .send(Message::Quit)
+                                    .expect("Error sending Quit message to egui");
                                 ctx_clone_tray.request_repaint();
                                 break;
                             }
                             Ok(Message::Icon) => {
-                                tray.set_icon(IconSource::Resource("app-icon")).unwrap();
-                                tx_egui_clone_tray.send(Message::Icon).unwrap();
+                                tray.set_icon(IconSource::Resource("app-icon"))
+                                    .expect("Error setting tray icon");
+                                tx_egui_clone_tray
+                                    .send(Message::Icon)
+                                    .expect("Error sending Icon message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
                             Ok(Message::ShowApp) => {
-                                tx_egui_clone_tray.send(Message::ShowApp).unwrap();
+                                tx_egui_clone_tray
+                                    .send(Message::ShowApp)
+                                    .expect("Error sending ShowApp message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
                             Ok(Message::HideApp) => {
-                                tx_egui_clone_tray.send(Message::HideApp).unwrap();
+                                tx_egui_clone_tray
+                                    .send(Message::HideApp)
+                                    .expect("Error sending HideApp message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
                             Err(_) => {
@@ -121,11 +155,15 @@ impl eframe::App for DriveFUSE {
                                 tracing::info!("Rclone config updated");
                             }
                             Ok(Message::MountAll) => {
-                                tx_egui_clone_tray.send(Message::MountAll).unwrap();
+                                tx_egui_clone_tray
+                                    .send(Message::MountAll)
+                                    .expect("Error sending MountAll message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
                             Ok(Message::UnmountAll) => {
-                                tx_egui_clone_tray.send(Message::UnmountAll).unwrap();
+                                tx_egui_clone_tray
+                                    .send(Message::UnmountAll)
+                                    .expect("Error sending UnmountAll message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
                             _ => {}
@@ -141,7 +179,8 @@ impl eframe::App for DriveFUSE {
                     let app_icon =
                         create_linux_tray_icon(include_bytes!("../assets/drivefuse.png"));
 
-                    let mut tray = TrayItem::new("DriveFUSE Tray", app_icon).unwrap();
+                    let mut tray = TrayItem::new("DriveFUSE Tray", app_icon)
+                        .expect("Error creating tray item");
                     let mut rx_tray = init_tray_menu(&mut tray);
                     loop {
                         match rx_tray.recv().await {
@@ -162,7 +201,7 @@ impl eframe::App for DriveFUSE {
                                 let app_icon = create_linux_tray_icon(include_bytes!(
                                     "../assets/drivefuse.png"
                                 ));
-                                tray.set_icon(app_icon).unwrap();
+                                tray.set_icon(app_icon).expect("Error setting icon");
                                 tx_egui_clone_tray
                                     .send(Message::Icon)
                                     .await
@@ -216,17 +255,21 @@ impl eframe::App for DriveFUSE {
                 let (tx_temp, mut rx_temp) = mpsc::unbounded_channel();
                 let mut watcher: RecommendedWatcher = RecommendedWatcher::new(
                     move |res| {
-                        tx_temp.send(res).unwrap();
+                        tx_temp
+                            .send(res)
+                            .expect("Error sending message to watcher thread");
                     },
                     Config::default(),
                 )
-                .unwrap();
+                .expect("Error creating watcher");
                 watcher
                     .watch(
-                        rclone_config_path().unwrap().as_path(),
+                        rclone_config_path()
+                            .expect("Error getting rclone config path")
+                            .as_path(),
                         RecursiveMode::Recursive,
                     )
-                    .unwrap();
+                    .expect("Error watching rclone config file");
                 loop {
                     match rx_temp.recv().await {
                         Some(res) => match res {
@@ -276,16 +319,16 @@ impl eframe::App for DriveFUSE {
                 Message::Quit => {
                     // ! unmount all drives
                     self.is_close_requested = true;
-                    frame.close();
+                    ctx.send_viewport_cmd(ViewportCommand::Close);
                 }
                 Message::Icon => {
-                    frame.set_window_title("DriveFUSE");
+                    ctx.send_viewport_cmd(ViewportCommand::Title("DriveFUSE".to_string()));
                 }
                 Message::ShowApp => {
-                    frame.set_visible(true);
+                    ctx.send_viewport_cmd(ViewportCommand::Visible(true));
                 }
                 Message::HideApp => {
-                    frame.set_visible(false);
+                    ctx.send_viewport_cmd(ViewportCommand::Visible(false));
                 }
                 Message::RcloneConfigUpdated => {
                     self.rclone = Rclone::init();
@@ -319,25 +362,5 @@ impl eframe::App for DriveFUSE {
             Tab::Manage => render_manage(ctx, self),
             Tab::Settings => render_settings(ctx, self),
         };
-    }
-
-    fn on_close_event(&mut self) -> bool {
-        match self.is_close_requested {
-            true => match self.mounted_storages.unmount_all() {
-                true => true,
-                false => {
-                    tracing::error!("Failed to unmount all drives");
-                    self.is_close_requested = false;
-                    false
-                }
-            },
-            false => {
-                self.tx_egui
-                    .try_send(Message::HideApp)
-                    .expect("Error sending HideApp message to egui");
-                self.is_close_requested = false;
-                false
-            }
-        }
     }
 }

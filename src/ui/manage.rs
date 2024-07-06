@@ -78,7 +78,7 @@ pub fn render_manage(ctx: &Context, app: &mut DriveFUSE) {
                 //             .storages
                 //             .iter()
                 //             .find(|s| s.name == name)
-                //             .unwrap()
+                //             .expect()
                 //             .clone();
 
                 //         ui.horizontal(|ui| {
@@ -97,7 +97,7 @@ pub fn render_manage(ctx: &Context, app: &mut DriveFUSE) {
                 //                 .storages
                 //                 .iter()
                 //                 .position(|temp| temp.name == old_name)
-                //                 .unwrap();
+                //                 .expect();
                 //             app.rclone.storages[index] = Storage {
                 //                 name: new_name.clone(),
                 //                 drive_type: app.rclone.storages[index].drive_type.clone(),

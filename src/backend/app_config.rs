@@ -23,15 +23,15 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn init() -> Self {
-        let config_path = app_config_path().unwrap();
+        let config_path = app_config_path().expect("Failed to get config path");
 
         if !config_path.exists() {
-            fs::create_dir_all(&config_path).unwrap()
+            fs::create_dir_all(&config_path).expect("Failed to create config directory");
         }
 
         let file = &config_path.join("config.json");
         if !file.exists() {
-            let mut file = File::create(file).unwrap();
+            let mut file = File::create(file).expect("Failed to create config file");
             let json = serde_json::to_string_pretty(&AppConfig {
                 is_first_run: true,
                 is_auto_mount: false,
@@ -43,34 +43,34 @@ impl AppConfig {
                 drives_letters: HashMap::new(),
                 drives_auto_mount: HashMap::new(),
             })
-            .unwrap();
-            file.write_all(json.as_bytes()).unwrap();
+            .expect("Failed to serialize config");
+            file.write_all(json.as_bytes()).expect("Failed to write to config file");
         }
 
-        let file = File::open(file).unwrap();
+        let file = File::open(file).expect("Failed to open config file");
         let reader = BufReader::new(file);
 
         let mut lines: Vec<String> = Vec::new();
 
         for line in reader.lines() {
-            lines.push(line.unwrap());
+            lines.push(line.expect("Failed to read line"));
         }
 
         let json = lines.join("\n");
 
-        serde_json::from_str(&json).unwrap()
+        serde_json::from_str(&json).expect("Failed to deserialize config")
     }
 
     fn save(&self) {
-        let config_path = app_config_path().unwrap();
+        let config_path = app_config_path().expect("Failed to get config path");
 
         if !config_path.exists() {
-            fs::create_dir_all(&config_path).unwrap()
+            fs::create_dir_all(&config_path).expect("Failed to create config directory");
         }
 
-        let mut file = File::create(config_path.join("config.json")).unwrap();
-        let json = serde_json::to_string_pretty(&self).unwrap();
-        file.write_all(json.as_bytes()).unwrap();
+        let mut file = File::create(config_path.join("config.json")).expect("Failed to create config file");
+        let json = serde_json::to_string_pretty(&self).expect("Failed to serialize config");
+        file.write_all(json.as_bytes()).expect("Failed to write to config file");
     }
 
     pub fn set_is_first_run(&mut self, is_first_run: bool) {

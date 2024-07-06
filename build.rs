@@ -7,7 +7,7 @@ fn main() {
     res.set_icon("assets/DriveFUSE.ico")
         .set_icon_with_id("assets/DriveFUSE.ico", "app-icon");
 
-    res.compile().unwrap();
+    res.compile().expect("Failed to compile resources");
 }
 
 #[cfg(target_os = "linux")]

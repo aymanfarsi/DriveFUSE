@@ -89,9 +89,12 @@ pub fn unmount_delete_directory(name: String) {
     let username = whoami::username();
     let path = format!("/home/{}/drive_fuse/{}", username, name);
 
-    let _ = Command::new("rm").args(["-d", &path]).spawn().unwrap();
+    let _ = Command::new("rm")
+        .args(["-d", &path])
+        .spawn()
+        .expect("Unable to delete directory");
 
-    fs::remove_dir(Path::new(&path)).unwrap();
+    fs::remove_dir(Path::new(&path)).expect("Unable to remove directory");
 }
 
 #[cfg(target_os = "macos")]
@@ -101,9 +104,12 @@ pub fn unmount_delete_directory(name: String) {
     let username = whoami::username();
     let path = format!("/Users/{}/drive_fuse/{}", username, name);
 
-    let _ = Command::new("rm").args(["-d", &path]).spawn().unwrap();
+    let _ = Command::new("rm")
+        .args(["-d", &path])
+        .spawn()
+        .expect("Unable to delete directory");
 
-    fs::remove_dir(Path::new(&path)).unwrap();
+    fs::remove_dir(Path::new(&path)).expect("Unable to remove directory");
 }
 
 pub fn enable_auto_mount(app: &mut DriveFUSE) {
@@ -117,34 +123,59 @@ pub fn disable_auto_mount(app: &mut DriveFUSE) {
 pub fn enable_auto_start_app() {
     let auto = AutoLaunchBuilder::new()
         .set_app_name("DriveFUSE")
-        .set_app_path(env::current_exe().unwrap().to_str().unwrap())
+        .set_app_path(
+            env::current_exe()
+                .expect("Unable to get current exe path")
+                .to_str()
+                .expect("Unable to convert path to string"),
+        )
         .set_args(&["--minimized"])
         .build()
-        .unwrap();
-    if !auto.is_enabled().unwrap() {
-        auto.enable().unwrap();
+        .expect("Unable to build AutoLaunch");
+
+    if !auto
+        .is_enabled()
+        .expect("Unable to check if app is enabled")
+    {
+        auto.enable().expect("Unable to enable app");
     }
 }
 
 pub fn is_app_auto_start() -> bool {
     let auto = AutoLaunchBuilder::new()
         .set_app_name("DriveFUSE")
-        .set_app_path(env::current_exe().unwrap().to_str().unwrap())
+        .set_app_path(
+            env::current_exe()
+                .expect("Unable to get current exe path")
+                .to_str()
+                .expect("Unable to convert path to string"),
+        )
         .set_args(&["--minimized"])
         .build()
-        .unwrap();
-    auto.is_enabled().unwrap()
+        .expect("Unable to build AutoLaunch");
+
+    auto.is_enabled()
+        .expect("Unable to check if app is enabled")
 }
 
 pub fn disable_auto_start_app() {
     let auto = AutoLaunchBuilder::new()
         .set_app_name("DriveFUSE")
-        .set_app_path(env::current_exe().unwrap().to_str().unwrap())
+        .set_app_path(
+            env::current_exe()
+                .expect("Unable to get current exe path")
+                .to_str()
+                .expect("Unable to convert path to string"),
+        )
         .set_args(&["--minimized"])
         .build()
-        .unwrap();
-    if auto.is_enabled().unwrap() {
-        auto.disable().unwrap();
+        .expect("Unable to build AutoLaunch");
+
+    if auto
+        .is_enabled()
+        .expect("Unable to check if app is enabled")
+    {
+        auto.disable().expect("Unable to disable app");
     }
 }
 
@@ -182,7 +213,13 @@ pub fn rclone_config_path() -> Option<PathBuf> {
 
 pub fn app_config_path() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
-    return UserDirs::new().map(|user_dirs| user_dirs.document_dir().unwrap().join("drive_fuse"));
+    return UserDirs::new().map(|user_dirs| {
+        user_dirs
+            .document_dir()
+            .expect("Unable to get document directory")
+            .join("drive_fuse")
+    });
+
     #[cfg(not(target_os = "windows"))]
     if cfg!(target_os = "linux") {
         Some(PathBuf::from(format!(
@@ -214,7 +251,7 @@ pub fn add_google_drive_storage(name: String) {
         #[cfg(target_os = "windows")]
         cmd.creation_flags(winbase::CREATE_NO_WINDOW);
 
-        cmd.spawn().unwrap();
+        cmd.spawn().expect("Unable to spawn command");
     });
 }
 
@@ -233,7 +270,7 @@ pub fn add_onedrive_storage(name: String) {
         #[cfg(target_os = "windows")]
         cmd.creation_flags(winbase::CREATE_NO_WINDOW);
 
-        cmd.spawn().unwrap();
+        cmd.spawn().expect("Unable to spawn command");
     });
 }
 
@@ -252,7 +289,7 @@ pub fn add_dropbox_storage(name: String) {
         #[cfg(target_os = "windows")]
         cmd.creation_flags(winbase::CREATE_NO_WINDOW);
 
-        cmd.spawn().unwrap();
+        cmd.spawn().expect("Unable to spawn command");
     });
 }
 
@@ -271,7 +308,7 @@ pub fn add_google_photos_storage(name: String) {
         #[cfg(target_os = "windows")]
         cmd.creation_flags(winbase::CREATE_NO_WINDOW);
 
-        cmd.spawn().unwrap();
+        cmd.spawn().expect("Unable to spawn command");
     });
 }
 
@@ -290,6 +327,6 @@ pub fn add_mega_storage(name: String) {
         #[cfg(target_os = "windows")]
         cmd.creation_flags(winbase::CREATE_NO_WINDOW);
 
-        cmd.spawn().unwrap();
+        cmd.spawn().expect("Unable to spawn command");
     });
 }
