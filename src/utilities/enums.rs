@@ -28,6 +28,7 @@ pub enum Message {
     RcloneConfigUpdated,
     MountAll,
     UnmountAll,
+    MountedSuccess,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

@@ -65,7 +65,7 @@ impl Rclone {
             lines.push(line.unwrap());
         }
 
-        println!("Read app config");
+        tracing::info!("Read app config");
 
         lines
     }
@@ -153,19 +153,7 @@ impl Rclone {
             }
         }
 
-        //for item in storages.clone() {
-        //    let res = get_info(item.name.clone());
-        //    match res {
-        //        Ok(output) => {
-        //            println!("{} has output of\n{}\n", item.name, output);
-        //        }
-        //        Err(err) => {
-        //            println!("Error: {}", err);
-        //        }
-        //    }
-        //}
-
-        println!("Parsed rclone config file");
+        tracing::info!("Parsed rclone config file");
 
         storages
     }
@@ -202,7 +190,7 @@ impl Rclone {
 
         match is_updated {
             true => Self::write_config(new_lines, None),
-            false => eprintln!("Error updating storage name"),
+            false => tracing::error!("Error updating storage name"),
         }
     }
 
@@ -216,7 +204,7 @@ impl Rclone {
         let output = output.output().expect("failed to execute process");
         match String::from_utf8(output.stdout) {
             Ok(_) => self.storages.retain(|storage| storage.name != name),
-            Err(_) => eprintln!("Error removing storage"),
+            Err(_) => tracing::error!("Error removing storage"),
         }
     }
 

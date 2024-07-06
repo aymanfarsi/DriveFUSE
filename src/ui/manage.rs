@@ -1,8 +1,8 @@
 use egui::{vec2, Button, CentralPanel, Context, CursorIcon, Grid, RichText, Rounding, ScrollArea};
 
-use crate::{utilities::enums::StorageType, RcloneApp};
+use crate::{utilities::enums::StorageType, DriveFUSE};
 
-pub fn render_manage(ctx: &Context, app: &mut RcloneApp) {
+pub fn render_manage(ctx: &Context, app: &mut DriveFUSE) {
     CentralPanel::default().show(ctx, |ui| {
         // * Label
         ui.heading(RichText::new("Manage your rclone storages").size(21.0));

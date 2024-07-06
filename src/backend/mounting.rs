@@ -1,5 +1,9 @@
 use std::{collections::HashMap, process::Command};
 
+use tokio::sync::mpsc::Sender;
+
+use crate::utilities::enums::Message;
+
 #[cfg(target_os = "windows")]
 use {
     crate::utilities::utils::available_drives, directories::UserDirs,
@@ -213,6 +217,7 @@ impl MountingStorage {
         name: String,
         _show_terminal: bool,
         _app_config: &mut AppConfig,
+        tx: Sender<Message>,
     ) {
         #[cfg(target_os = "windows")]
         {
@@ -229,6 +234,8 @@ impl MountingStorage {
                     self.mounted
                         .insert(name.clone(), _driver_letter.chars().next().unwrap());
                     _app_config.set_drives_letters(name, _driver_letter.chars().next().unwrap());
+
+                    tx.send(Message::MountedSuccess).unwrap();
                 }
                 None => {
                     tracing::error!("Failed to mount {} to {}", name, _driver_letter);
@@ -244,6 +251,9 @@ impl MountingStorage {
                 Some(id) => {
                     tracing::info!("Mounted {} to /home/{}/drive_fuse/{}", username, name, name);
                     self.drives.insert(name.clone(), id);
+
+                    tx.try_send(Message::MountedSuccess)
+                        .expect("Failed to send MoutedSuccess message");
                 }
                 None => {
                     tracing::error!(
@@ -262,8 +272,15 @@ impl MountingStorage {
             let id = Self::mount_unix(name.clone());
             match id {
                 Some(id) => {
-                    tracing::info!("Mounted {} to /Users/{}/drive_fuse/{}", username, name, name);
+                    tracing::info!(
+                        "Mounted {} to /Users/{}/drive_fuse/{}",
+                        username,
+                        name,
+                        name
+                    );
                     self.drives.insert(name.clone(), id);
+
+                    tx.send(Message::MountedSuccess).unwrap();
                 }
                 None => {
                     tracing::error!(
@@ -414,9 +431,9 @@ impl MountingStorage {
             .arg(format!("/home/{}/drive_fuse/{}", username, name))
             .arg("--vfs-cache-mode")
             .arg("full");
-            //.arg("--dir-cache-time")
-            //.arg("1000h")
-            // .arg("--allow-other")
+        //.arg("--dir-cache-time")
+        //.arg("1000h")
+        // .arg("--allow-other")
 
         let process = process.spawn();
 
@@ -451,9 +468,9 @@ impl MountingStorage {
             .arg(format!("/Users/{}/drive_fuse/{}", username, name))
             .arg("--vfs-cache-mode")
             .arg("full");
-            //.arg("--dir-cache-time")
-            //.arg("1000h")
-            // .arg("--allow-other")
+        //.arg("--dir-cache-time")
+        //.arg("1000h")
+        // .arg("--allow-other")
 
         let process = process.spawn();
 

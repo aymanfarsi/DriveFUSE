@@ -8,13 +8,24 @@ use auto_launch::AutoLaunchBuilder;
 #[cfg(target_os = "windows")]
 use directories::{BaseDirs, UserDirs};
 
+use crate::DriveFUSE;
+
 #[cfg(target_os = "windows")]
 use {std::os::windows::process::CommandExt, winapi::um::winbase, windows::Win32};
 
 #[cfg(target_os = "linux")]
 use {std::io::Cursor, tray_item::IconSource};
 
-use crate::RcloneApp;
+#[cfg(target_os = "linux")]
+pub fn open_drive_location(name: String) {
+    let username = whoami::username();
+    let path = format!("/home/{}/drive_fuse/{}", username, name);
+
+    let _ = Command::new("xdg-open")
+        .arg(&path)
+        .spawn()
+        .expect("Unable to open drive location");
+}
 
 #[cfg(target_os = "linux")]
 pub fn create_linux_tray_icon(bytes: &[u8]) -> IconSource {
@@ -95,17 +106,17 @@ pub fn unmount_delete_directory(name: String) {
     fs::remove_dir(Path::new(&path)).unwrap();
 }
 
-pub fn enable_auto_mount(app: &mut RcloneApp) {
+pub fn enable_auto_mount(app: &mut DriveFUSE) {
     app.app_config.set_is_auto_mount(true);
 }
 
-pub fn disable_auto_mount(app: &mut RcloneApp) {
+pub fn disable_auto_mount(app: &mut DriveFUSE) {
     app.app_config.set_is_auto_mount(false);
 }
 
 pub fn enable_auto_start_app() {
     let auto = AutoLaunchBuilder::new()
-        .set_app_name("RcloneApp")
+        .set_app_name("DriveFUSE")
         .set_app_path(env::current_exe().unwrap().to_str().unwrap())
         .set_args(&["--minimized"])
         .build()
@@ -117,7 +128,7 @@ pub fn enable_auto_start_app() {
 
 pub fn is_app_auto_start() -> bool {
     let auto = AutoLaunchBuilder::new()
-        .set_app_name("RcloneApp")
+        .set_app_name("DriveFUSE")
         .set_app_path(env::current_exe().unwrap().to_str().unwrap())
         .set_args(&["--minimized"])
         .build()
@@ -127,7 +138,7 @@ pub fn is_app_auto_start() -> bool {
 
 pub fn disable_auto_start_app() {
     let auto = AutoLaunchBuilder::new()
-        .set_app_name("RcloneApp")
+        .set_app_name("DriveFUSE")
         .set_app_path(env::current_exe().unwrap().to_str().unwrap())
         .set_args(&["--minimized"])
         .build()

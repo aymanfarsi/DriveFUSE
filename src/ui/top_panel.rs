@@ -1,8 +1,8 @@
 use egui::{menu, vec2, Align, Button, Layout, RichText, TextStyle, TopBottomPanel};
 
-use crate::{utilities::enums::Tab, RcloneApp};
+use crate::{utilities::enums::Tab, DriveFUSE};
 
-pub fn render_top_panel(ctx: &egui::Context, app: &mut RcloneApp) {
+pub fn render_top_panel(ctx: &egui::Context, app: &mut DriveFUSE) {
     TopBottomPanel::top("top_panel").show(ctx, |ui| {
         ui.add_space(3.);
         ui.horizontal_wrapped(|ui| {

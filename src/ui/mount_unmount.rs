@@ -3,9 +3,12 @@ use egui::{vec2, Button, CentralPanel, Color32, Context, Grid, RichText, Roundin
 #[cfg(target_os = "windows")]
 use {crate::utilities::utils::available_drives, egui::ComboBox};
 
-use crate::{utilities::enums::AppTheme, RcloneApp};
+use crate::{
+    utilities::{enums::AppTheme, utils::open_drive_location},
+    DriveFUSE,
+};
 
-pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
+pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
     CentralPanel::default().show(ctx, |ui| {
         //        ui.heading(
         //            RichText::new(format!(
@@ -25,12 +28,18 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                     .min_col_width(80.0)
                     .show(ui, |ui| {
                         ui.label("Name");
+
                         ui.label("Type");
+
                         ui.label("Status");
+
                         #[cfg(target_os = "windows")]
                         ui.label("Drive Letter");
+                        #[cfg(target_family = "unix")]
+                        ui.label("Location");
+
                         ui.label("Action | Auto Mount");
-                        // ui.label("Auto Mount");
+
                         ui.end_row();
 
                         for storage in &app.rclone.storages {
@@ -93,6 +102,22 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                         }
                                     });
                             }
+
+                            #[cfg(target_family = "unix")]
+                            ui.horizontal(|ui| {
+                                ui.add_enabled_ui(is_mounted, |ui| {
+                                    let open_button = ui.add_sized(
+                                        vec2(60.0, 20.0),
+                                        Button::new(RichText::new("Open"))
+                                            .frame(true)
+                                            .rounding(Rounding::same(5.)),
+                                    );
+
+                                    if open_button.clicked() {
+                                        open_drive_location(storage.name.clone());
+                                    }
+                                });
+                            });
 
                             ui.horizontal(|ui| {
                                 let mount_buttton = ui.add_sized(
@@ -160,6 +185,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                                 storage.name.clone(),
                                                 false,
                                                 &mut app.app_config,
+                                                app.tx_egui.clone(),
                                             );
                                         }
                                     }
@@ -186,40 +212,6 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut RcloneApp) {
                                     );
                                 }
                             });
-
-                            // if mount_buttton.secondary_clicked() {
-                            //     #[cfg(target_os = "windows")]
-                            //     {
-                            //         if is_mounted {
-                            //             app.mounted_storages.unmount(storage.name.clone());
-                            //         } else {
-                            //             let is_already_mounted =
-                            //                 app.mounted_storages.is_drive_letter_mounted(
-                            //                     letter.clone().chars().next().unwrap(),
-                            //                 );
-                            //             if letter != "N/A" && !is_already_mounted {
-                            //                 app.mounted_storages.mount(
-                            //                     letter,
-                            //                     storage.name.clone(),
-                            //                     true,
-                            //                     &mut app.app_config,
-                            //                 );
-                            //             }
-                            //         }
-                            //     }
-                            //     #[cfg(target_family = "unix")]
-                            //     {
-                            //         if is_mounted {
-                            //             app.mounted_storages.unmount(storage.name.clone());
-                            //         } else {
-                            //             app.mounted_storages.mount(
-                            //                 app.new_storage_drive_letter.clone(),
-                            //                 storage.name.clone(),
-                            //                 true,
-                            //             );
-                            //         }
-                            //     }
-                            // }
 
                             ui.end_row();
                         }

@@ -6,7 +6,7 @@ pub mod utilities {
     pub mod tray_menu;
     pub mod utils;
 }
-pub use app::RcloneApp;
+pub use app::DriveFUSE;
 pub mod backend {
     pub mod app_config;
     pub mod mounting;

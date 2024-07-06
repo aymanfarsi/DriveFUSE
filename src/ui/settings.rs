@@ -8,10 +8,10 @@ use crate::{
             is_app_auto_start,
         },
     },
-    RcloneApp,
+    DriveFUSE,
 };
 
-pub fn render_settings(ctx: &Context, app: &mut RcloneApp) {
+pub fn render_settings(ctx: &Context, app: &mut DriveFUSE) {
     CentralPanel::default().show(ctx, |ui| {
         ui.heading("Settings");
 

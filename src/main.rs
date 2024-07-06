@@ -3,7 +3,7 @@
 
 use std::{env, path::Path, process::Command};
 
-use drive_fuse::{error_app::ErrorApp, RcloneApp};
+use drive_fuse::{error_app::ErrorApp, DriveFUSE};
 use eframe::IconData;
 use tokio::runtime::Runtime;
 use tracing::level_filters::LevelFilter;
@@ -118,7 +118,7 @@ fn main() -> eframe::Result<()> {
         eframe::run_native(
             "DriveFUSE",
             native_options,
-            Box::new(|_cc| Box::new(RcloneApp::default())),
+            Box::new(|_cc| Box::new(DriveFUSE::default())),
         )
     }
 }

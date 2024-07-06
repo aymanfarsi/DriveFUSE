@@ -1,6 +1,6 @@
 [package]
 name = "drive_fuse"
-version = "0.10.0"
+version = "0.12.3"
 authors = ["evilDAVE <aymanfarsi99@proton.me>"]
 edition = "2021"
 rust-version = "1.70"
