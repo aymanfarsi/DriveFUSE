@@ -1,6 +1,6 @@
 use std::{collections::HashMap, process::Command};
 
-use tokio::sync::mpsc::Sender;
+use tokio::sync::mpsc::UnboundedSender;
 
 use crate::utilities::enums::Message;
 
@@ -222,7 +222,7 @@ impl MountingStorage {
         name: String,
         _show_terminal: bool,
         _app_config: &mut AppConfig,
-        tx: Sender<Message>,
+        tx: UnboundedSender<Message>,
     ) {
         #[cfg(target_os = "windows")]
         {
@@ -263,7 +263,7 @@ impl MountingStorage {
                     tracing::info!("Mounted {} to /home/{}/drive_fuse/{}", username, name, name);
                     self.drives.insert(name.clone(), id);
 
-                    tx.try_send(Message::MountedSuccess)
+                    tx.send(Message::MountedSuccess)
                         .expect("Failed to send MoutedSuccess message");
                 }
                 None => {

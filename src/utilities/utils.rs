@@ -14,7 +14,7 @@ use crate::DriveFUSE;
 use {std::os::windows::process::CommandExt, winapi::um::winbase, windows::Win32};
 
 #[cfg(target_os = "linux")]
-use {std::io::Cursor, tray_item::IconSource};
+use std::io::Cursor;
 
 #[cfg(target_os = "linux")]
 pub fn open_drive_location(name: String) {
@@ -28,20 +28,16 @@ pub fn open_drive_location(name: String) {
 }
 
 #[cfg(target_os = "linux")]
-pub fn create_linux_tray_icon(bytes: &[u8]) -> IconSource {
-    let cursor = Cursor::new(bytes);
-    let decoder = png::Decoder::new(cursor);
-    let (info, mut reader) = decoder.read_info().expect("Error while reading info");
-    let mut buf = vec![0; info.buffer_size()];
-    reader
-        .next_frame(&mut buf)
-        .expect("Error while reading next frame");
-
-    IconSource::Data {
-        data: buf,
-        height: 32,
-        width: 32,
-    }
+pub fn load_icon(bytes: &[u8]) -> tray_icon::Icon {
+    let (icon_rgba, icon_width, icon_height) = {
+        let image = image::load(Cursor::new(bytes), image::ImageFormat::Png)
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+    tray_icon::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
 }
 
 #[cfg(target_family = "unix")]

@@ -200,14 +200,28 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
                                     .get_drive_auto_mount(&storage.name.clone())
                                     .unwrap_or(false);
                                 let auto_mount = ui.add(
-                                    Button::new(if storage_auto_mount { "Yes" } else { "No" })
-                                        .fill(if storage_auto_mount {
-                                            Color32::GREEN
+                                    Button::new(
+                                        RichText::new(if storage_auto_mount {
+                                            "Yes"
                                         } else {
-                                            Color32::RED
+                                            "No"
                                         })
-                                        .frame(!storage_auto_mount)
-                                        .rounding(Rounding::same(5.)),
+                                        .color(
+                                            if storage_auto_mount {
+                                                Color32::BLACK
+                                            } else {
+                                                Color32::WHITE
+                                            },
+                                        ),
+                                    )
+                                    .fill(if storage_auto_mount {
+                                        Color32::LIGHT_GREEN
+                                    } else {
+                                        Color32::RED
+                                    })
+                                    .frame(!storage_auto_mount)
+                                    .rounding(Rounding::same(5.))
+                                    .min_size(vec2(50.0, 20.0)),
                                 );
                                 if auto_mount.clicked() {
                                     app.app_config.set_drives_auto_mount(

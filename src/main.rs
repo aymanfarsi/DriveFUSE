@@ -92,16 +92,37 @@ fn main() -> eframe::Result<()> {
             Box::new(move |_cc| Box::new(error_app)),
         )
     } else {
+        let rt = Runtime::new().expect("Unable to create Runtime");
+        let _enter = rt.enter();
+
         #[cfg(target_os = "linux")]
-        create_dir_all(format!("/home/{}/drive_fuse", whoami::username()))
-            .expect("Unable to create directory");
+        {
+            create_dir_all(format!("/home/{}/drive_fuse", whoami::username()))
+                .expect("Unable to create directory");
+
+            tokio::spawn(async move {
+                use drive_fuse::utilities::{tray_menu::init_tray_menu, utils::load_icon};
+                use tray_icon::{menu::Menu, TrayIconBuilder};
+
+                let app_icon = load_icon(include_bytes!("../assets/drivefuse.png"));
+
+                let mut menu = Menu::new();
+                init_tray_menu(&mut menu);
+
+                gtk::init().unwrap();
+                let _tray_icon = TrayIconBuilder::new()
+                    .with_menu(Box::new(menu))
+                    .with_icon(app_icon)
+                    .with_tooltip("DriveFUSE Tray")
+                    .build()
+                    .expect("Error creating tray icon");
+                gtk::main();
+            });
+        }
 
         #[cfg(target_os = "macos")]
         create_dir_all(format!("/Users/{}/drive_fuse", whoami::username()))
             .expect("Unable to create directory");
-
-        let rt = Runtime::new().expect("Unable to create Runtime");
-        let _enter = rt.enter();
 
         let min_size = Vec2::new(490., 292.5);
         let native_options = eframe::NativeOptions {

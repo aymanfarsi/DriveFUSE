@@ -57,9 +57,10 @@ eframe = { version = "0.27.1", default-features = false, features = [
     "x11",
     "glow",
 ] }
-tray-item = { version = "0.10.0", features = ["ksni"] }
-png = "0.16"
+tray-icon = { version = "0.14.3" }
+image = "0.25.1"
 whoami = "1.5.0"
+gtk = "0.18"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 eframe = { version = "0.27.1", default-features = false, features = [
