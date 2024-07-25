@@ -445,6 +445,7 @@ impl MountingStorage {
                 .create(format!("/home/{}/drive_fuse/{}", username, name))
                 .expect("Failed to create directory");
         }
+
         let mut cmd = Command::new("rclone");
         let process = cmd
             .arg("mount")

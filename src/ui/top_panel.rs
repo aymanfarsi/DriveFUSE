@@ -16,6 +16,8 @@ pub fn render_top_panel(ctx: &egui::Context, app: &mut DriveFUSE) {
                     );
                     ui.label(RichText::new(text).size(14.).strong());
 
+                    ui.label(RichText::new(app.platform.clone()).size(14.));
+
                     ui.add_space(3.);
                     for tab in Tab::values() {
                         let btn = ui.selectable_label(

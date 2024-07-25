@@ -89,7 +89,7 @@ fn main() -> eframe::Result<()> {
         eframe::run_native(
             "DriveFUSE",
             native_options,
-            Box::new(move |_cc| Box::new(error_app)),
+            Box::new(move |_cc| Ok(Box::new(error_app))),
         )
     } else {
         let rt = Runtime::new().expect("Unable to create Runtime");
@@ -142,7 +142,7 @@ fn main() -> eframe::Result<()> {
         eframe::run_native(
             "DriveFUSE",
             native_options,
-            Box::new(|_cc| Box::new(DriveFUSE::default())),
+            Box::new(|_cc| Ok(Box::new(DriveFUSE::new()))),
         )
     }
 }

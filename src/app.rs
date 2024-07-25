@@ -1,3 +1,5 @@
+use std::process::Command;
+
 use eframe::egui;
 use egui::ViewportCommand;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
@@ -40,12 +42,8 @@ pub struct DriveFUSE {
 
     pub tx_egui: UnboundedSender<Message>,
     rx_egui: UnboundedReceiver<Message>,
-}
 
-impl Default for DriveFUSE {
-    fn default() -> Self {
-        Self::new()
-    }
+    pub platform: String,
 }
 
 impl DriveFUSE {
@@ -54,6 +52,24 @@ impl DriveFUSE {
 
         let app_config = AppConfig::init();
         let rclone = Rclone::init();
+
+        let platform = if cfg!(target_os = "linux") {
+            let cmd = "loginctl show-session $(awk '/tty/ {print $1}' <(loginctl)) -p Type | awk -F= '{print $2}'";
+            let output = Command::new("bash")
+                .arg("-c")
+                .arg(cmd)
+                .output()
+                .expect("Unable to get platform");
+            let platform = String::from_utf8(output.stdout).unwrap();
+
+            let mut s = platform.trim().to_string();
+
+            format!("{}{s}", s.remove(0).to_uppercase())
+        } else if cfg!(target_os = "macos") {
+            "macOS".to_string()
+        } else {
+            "Windows".to_string()
+        };
 
         Self {
             app_config,
@@ -71,6 +87,8 @@ impl DriveFUSE {
 
             tx_egui,
             rx_egui,
+
+            platform,
         }
     }
 }
@@ -159,7 +177,6 @@ impl eframe::App for DriveFUSE {
                         if let Ok(event) = MenuEvent::receiver().recv() {
                             let MenuEvent { id, .. } = event;
                             let id = id.0.as_str();
-
                             match id {
                                 "quit" => {
                                     tx_egui_clone_tray
@@ -192,7 +209,7 @@ impl eframe::App for DriveFUSE {
                                         .expect("Error sending UnmountAll message to egui");
                                     ctx_clone_tray.request_repaint();
                                 }
-                                _ => {}
+                                _ => panic!("Unknown menu item"),
                             }
                         }
                     }
@@ -336,11 +353,12 @@ impl eframe::App for DriveFUSE {
             match self.is_close_requested {
                 true => match self.mounted_storages.unmount_all() {
                     true => {
-                        println!("Closing DriveFUSE");
+                        tracing::info!("Unmounted all drives and quitting");
+                        std::process::exit(0);
                     }
                     false => {
                         self.is_close_requested = false;
-                        ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+                        ctx.send_viewport_cmd(ViewportCommand::CancelClose);
                     }
                 },
                 false => {
@@ -348,7 +366,7 @@ impl eframe::App for DriveFUSE {
                         .send(Message::HideApp)
                         .expect("Error sending HideApp message to egui");
                     self.is_close_requested = false;
-                    ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+                    ctx.send_viewport_cmd(ViewportCommand::CancelClose);
                 }
             }
         }
