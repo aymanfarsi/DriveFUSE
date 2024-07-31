@@ -1,7 +1,8 @@
 #[cfg(not(target_os = "linux"))]
 use {
     super::enums::Message,
-    tokio::sync::mpsc::{self},
+    tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver},
+    tray_item::TrayItem,
 };
 
 #[cfg(target_os = "linux")]
@@ -79,16 +80,14 @@ pub fn init_tray_menu(menu: &mut Menu) {
 
 #[cfg(not(target_os = "linux"))]
 pub fn init_tray_menu(tray: &mut TrayItem) -> UnboundedReceiver<Message> {
-    use tokio::sync::mpsc::UnboundedReceiver;
-
-    let (tx, rx) = mpsc::channel(10);
+    let (tx, rx) = unbounded_channel();
 
     // TODO: combine show & hide app into one menu item
     // use https://github.com/olback/tray-item-rs/blob/master/examples/windows-edit-menu-items/src/main.rs
     let show_app_tx = tx.clone();
     tray.add_menu_item("Show app", move || {
         show_app_tx
-            .try_send(Message::ShowApp)
+            .send(Message::ShowApp)
             .expect("Failed to send ShowApp message");
     })
     .expect("Failed to add Show app menu item");
@@ -96,7 +95,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> UnboundedReceiver<Message> {
     let hide_app_tx = tx.clone();
     tray.add_menu_item("Hide app", move || {
         hide_app_tx
-            .try_send(Message::HideApp)
+            .send(Message::HideApp)
             .expect("Failed to send HideApp message");
     })
     .expect("Failed to add Hide app menu item");
@@ -109,7 +108,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> UnboundedReceiver<Message> {
     let mount_all_tx = tx.clone();
     tray.add_menu_item("Mount all", move || {
         mount_all_tx
-            .try_send(Message::MountAll)
+            .send(Message::MountAll)
             .expect("Failed to send MountAll message");
     })
     .expect("Failed to add Mount all menu item");
@@ -117,7 +116,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> UnboundedReceiver<Message> {
     let unmount_all_tx = tx.clone();
     tray.add_menu_item("Unmount all", move || {
         unmount_all_tx
-            .try_send(Message::UnmountAll)
+            .send(Message::UnmountAll)
             .expect("Failed to send UnmountAll message");
     })
     .expect("Failed to add Unmount all menu item");
@@ -130,7 +129,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> UnboundedReceiver<Message> {
     let icon_tx = tx.clone();
     tray.add_menu_item("DriveFUSE", move || {
         icon_tx
-            .try_send(Message::Icon)
+            .send(Message::Icon)
             .expect("Failed to send Icon message");
     })
     .expect("Failed to add DriveFUSE menu item");
@@ -143,7 +142,7 @@ pub fn init_tray_menu(tray: &mut TrayItem) -> UnboundedReceiver<Message> {
     let quit_tx = tx.clone();
     tray.add_menu_item("Quit", move || {
         quit_tx
-            .try_send(Message::Quit)
+            .send(Message::Quit)
             .expect("Failed to send Quit message");
     })
     .expect("Failed to add Quit menu item");

@@ -4,6 +4,7 @@ use eframe::egui;
 use egui::ViewportCommand;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
+use tray_item::{IconSource, TrayItem};
 
 #[cfg(target_os = "windows")]
 use crate::utilities::tray_menu::init_tray_menu;
@@ -111,10 +112,10 @@ impl eframe::App for DriveFUSE {
                     let icon = IconSource::Resource("app-icon");
                     let mut tray =
                         TrayItem::new("DriveFUSE Tray", icon).expect("Error creating tray item");
-                    let rx_tray = init_tray_menu(&mut tray);
+                    let mut rx_tray = init_tray_menu(&mut tray);
                     loop {
-                        match rx_tray.recv() {
-                            Ok(Message::Quit) => {
+                        match rx_tray.recv().await {
+                            Some(Message::Quit) => {
                                 tx_egui_clone_tray
                                     .send(Message::ShowApp)
                                     .expect("Error sending ShowApp message to egui");
@@ -125,7 +126,7 @@ impl eframe::App for DriveFUSE {
                                 ctx_clone_tray.request_repaint();
                                 break;
                             }
-                            Ok(Message::Icon) => {
+                            Some(Message::Icon) => {
                                 tray.set_icon(IconSource::Resource("app-icon"))
                                     .expect("Error setting tray icon");
                                 tx_egui_clone_tray
@@ -133,37 +134,41 @@ impl eframe::App for DriveFUSE {
                                     .expect("Error sending Icon message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
-                            Ok(Message::ShowApp) => {
+                            Some(Message::ShowApp) => {
                                 tx_egui_clone_tray
                                     .send(Message::ShowApp)
                                     .expect("Error sending ShowApp message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
-                            Ok(Message::HideApp) => {
+                            Some(Message::HideApp) => {
                                 tx_egui_clone_tray
                                     .send(Message::HideApp)
                                     .expect("Error sending HideApp message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
-                            Err(_) => {
-                                tracing::error!("Error receiving message from tray menu");
-                            }
-                            Ok(Message::RcloneConfigUpdated) => {
+                            Some(Message::RcloneConfigUpdated) => {
                                 tracing::info!("Rclone config updated");
                             }
-                            Ok(Message::MountAll) => {
+                            Some(Message::MountAll) => {
                                 tx_egui_clone_tray
                                     .send(Message::MountAll)
                                     .expect("Error sending MountAll message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
-                            Ok(Message::UnmountAll) => {
+                            Some(Message::UnmountAll) => {
                                 tx_egui_clone_tray
                                     .send(Message::UnmountAll)
                                     .expect("Error sending UnmountAll message to egui");
                                 ctx_clone_tray.request_repaint();
                             }
-                            _ => {}
+                            None => {
+                                tracing::error!(
+                                    "Error receiving message from tray menu. Channel closed"
+                                );
+                            }
+                            _ => {
+                                tracing::error!("Unhandeled message from tray menu");
+                            }
                         }
                     }
                 });

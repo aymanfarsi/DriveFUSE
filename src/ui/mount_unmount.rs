@@ -3,10 +3,10 @@ use egui::{vec2, Button, CentralPanel, Color32, Context, Grid, RichText, Roundin
 #[cfg(target_os = "windows")]
 use {crate::utilities::utils::available_drives, egui::ComboBox};
 
-use crate::{
-    utilities::{enums::AppTheme, utils::open_drive_location},
-    DriveFUSE,
-};
+#[cfg(target_family = "unix")]
+use crate::utilities::utils::open_drive_location;
+
+use crate::{utilities::enums::AppTheme, DriveFUSE};
 
 pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
     CentralPanel::default().show(ctx, |ui| {
@@ -76,7 +76,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
                             let letter = app
                                 .app_config
                                 .get_drive_letter(&storage.name.clone())
-                                .expect_or("N/A".to_string());
+                                .expect("N/A");
                             #[cfg(target_os = "windows")]
                             if is_mounted {
                                 ui.label(letter.clone());
@@ -153,6 +153,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
                                                     storage.name.clone(),
                                                     false,
                                                     &mut app.app_config,
+                                                    app.tx_egui.clone(),
                                                 );
                                             } else if letter == "N/A" {
                                                 let possible_drives = available_drives();
@@ -168,6 +169,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
                                                     storage.name.clone(),
                                                     false,
                                                     &mut app.app_config,
+                                                    app.tx_egui.clone(),
                                                 );
                                             } else {
                                                 app.mounted_storages.mount(
@@ -175,6 +177,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
                                                     storage.name.clone(),
                                                     false,
                                                     &mut app.app_config,
+                                                    app.tx_egui.clone(),
                                                 );
                                             }
                                         }
