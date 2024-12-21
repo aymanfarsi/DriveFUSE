@@ -20,6 +20,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
         //        ui.add_space(8.0);
         ScrollArea::new([false, true])
             .auto_shrink([false, true])
+            .drag_to_scroll(false)
             .show(ui, |ui| {
                 Grid::new("storage_grid")
                     .striped(app.app_config.current_theme == AppTheme::Dark)
@@ -62,6 +63,7 @@ pub fn render_mount_unmount(ctx: &Context, app: &mut DriveFUSE) {
                                 "dropbox" => "Dropbox",
                                 "googlephotos" => "Google Photos",
                                 "mega" => "Mega",
+                                "nextcloud" => "NextCloud",
                                 _ => "Unknown",
                             };
 

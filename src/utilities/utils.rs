@@ -326,3 +326,22 @@ pub fn add_mega_storage(name: String) {
         cmd.spawn().expect("Unable to spawn command");
     });
 }
+
+// NextCloud
+pub fn add_nextcloud_storage(name: String) {
+    tokio::spawn(async move {
+        let mut cmd = Command::new("rclone");
+        let cmd = cmd.args(&[
+            String::from("config"),
+            String::from("create"),
+            name.trim().to_string(),
+            String::from("nextcloud"),
+            String::from("config_is_local=true"),
+        ]);
+
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(winbase::CREATE_NO_WINDOW);
+
+        cmd.spawn().expect("Unable to spawn command");
+    });
+}

@@ -301,6 +301,7 @@ impl eframe::App for DriveFUSE {
                     tracing::info!("ShowApp message received");
 
                     ctx.send_viewport_cmd(ViewportCommand::Visible(true));
+                    ctx.send_viewport_cmd(ViewportCommand::Focus);
                 }
                 Message::HideApp => {
                     tracing::info!("HideApp message received");

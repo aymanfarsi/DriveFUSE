@@ -14,7 +14,7 @@ use crate::utilities::{
     enums::StorageType,
     utils::{
         add_dropbox_storage, add_google_drive_storage, add_google_photos_storage,
-        add_onedrive_storage, app_config_path, rclone_config_path,
+        add_nextcloud_storage, add_onedrive_storage, app_config_path, rclone_config_path,
     },
 };
 
@@ -169,6 +169,7 @@ impl Rclone {
             StorageType::Dropbox => add_dropbox_storage(name),
             StorageType::GooglePhotos => add_google_photos_storage(name),
             // StorageType::Mega => add_mega_storage(name),
+            StorageType::NextCloud => add_nextcloud_storage(name),
         }
     }
 

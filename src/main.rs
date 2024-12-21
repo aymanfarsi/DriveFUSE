@@ -74,6 +74,7 @@ fn main() -> eframe::Result<()> {
         let min_size = Vec2::new(395., 292.5);
         let native_options = eframe::NativeOptions {
             centered: true,
+            persist_window: true,
             viewport: ViewportBuilder::default()
                 .with_decorations(true)
                 .with_transparent(false)

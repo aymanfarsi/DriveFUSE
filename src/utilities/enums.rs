@@ -38,6 +38,7 @@ pub enum StorageType {
     Dropbox,
     GooglePhotos,
     // Mega,
+    NextCloud,
 }
 
 impl StorageType {
@@ -48,16 +49,18 @@ impl StorageType {
             StorageType::Dropbox => "Dropbox",
             StorageType::GooglePhotos => "Google Photos",
             // StorageType::Mega => "Mega",
+            StorageType::NextCloud => "NextCloud",
         }
     }
 
-    pub fn values() -> [StorageType; 4] {
+    pub fn values() -> [StorageType; 5] {
         [
             StorageType::GoogleDrive,
             StorageType::OneDrive,
             StorageType::Dropbox,
             StorageType::GooglePhotos,
             // StorageType::Mega,
+            StorageType::NextCloud,
         ]
     }
 }
